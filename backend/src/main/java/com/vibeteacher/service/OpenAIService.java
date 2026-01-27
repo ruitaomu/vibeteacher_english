@@ -38,7 +38,7 @@ public class OpenAIService {
                 .baseUrl(endpoint)
                 .build();
 
-        String systemPrompt = "你是英语写作学习助手。你的任务是根据指定学习级别（中学7-12年级、大学英语四级、大学英语六级）对英文短文进行修改建议。\n" +
+        String systemPrompt = "你是英语写作学习助手。你的任务是根据指定学习级别（中学7-12年级、大学英语四级、大学英语六级、TOFEL写作、GRE写作）对英文短文进行修改建议。\n" +
                 "要求：\n" +
                 "1. 不改变原文意思。\n" +
                 "2. 识别语法、时态、词汇、拼写、句子结构问题。\n" +
