@@ -4,6 +4,7 @@ public class RevisionRequest {
     private String level;
     private String text;
     private String model;
+    private String requirements;
 
     public String getLevel() {
         return level;
@@ -27,6 +28,14 @@ public class RevisionRequest {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
     }
 
 }

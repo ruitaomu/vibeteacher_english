@@ -5,6 +5,11 @@ spring:
     serialization:
       indent_output: true
 
+keyvault:
+  url: "https://vibeteacher-kv.vault.azure.net/"
+  secretName: "AZUREOPENAI-APIKEY"
+  endpointSecretName: "AZUREOPENAI-ENDPOINT"
+
 
 # 本地调试示例（可按需启用）
 # keyvault:

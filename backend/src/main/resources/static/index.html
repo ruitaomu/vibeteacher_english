@@ -140,6 +140,10 @@
       <label>英文写作片段</label>
       <textarea v-model="form.text" placeholder="请输入英文段落..."></textarea>
     </div>
+    <div style="margin-top:16px;">
+      <label>附加修改要求（可选）</label>
+      <textarea v-model="form.requirements" placeholder="如：更正式、用词更高级、句式更丰富..." style="min-height: 90px;"></textarea>
+    </div>
     <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
       <button @click="submit" :disabled="loading">{{ loading ? '分析中...' : '生成修改建议' }}</button>
     </div>
@@ -165,8 +169,7 @@
           <div class="muted"><strong>原因：</strong>{{ issue.reason }}</div>
         </div>
       </div>
-      <div v-else class="muted">未返回结构化问题列表，将显示原始输出：</div>
-      <pre style="white-space: pre-wrap; margin-top: 10px;">{{ result.rawOutput }}</pre>
+      <div v-else class="muted">未返回结构化问题列表。</div>
     </div>
   </div>
 </div>
@@ -187,7 +190,8 @@ createApp({
       form: {
         level: '中学7年级',
         model: 'gpt-5.2',
-        text: ''
+        text: '',
+        requirements: ''
       },
       sessionToken: '',
       tokenExpiresAt: 0

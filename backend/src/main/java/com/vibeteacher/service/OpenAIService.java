@@ -24,7 +24,7 @@ public class OpenAIService {
         this.keyVaultService = keyVaultService;
     }
 
-    public RevisionResponse revise(String model, String level, String text) {
+    public RevisionResponse revise(String model, String level, String text, String requirements) {
         String apiKey = keyVaultService.getApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("未配置 Key Vault API KEY");
@@ -44,10 +44,17 @@ public class OpenAIService {
                 "2. 识别语法、时态、词汇、拼写、句子结构问题。\n" +
                 "3. 检查是否存在句式过于简单、用词过于基础、明显低于该年级水平的情况，并给出升级建议。\n" +
                 "4. 修改意见必须使用中文。\n" +
-                "5. 输出 JSON 对象，字段为: correctedText, summary, issues。\n" +
-                "6. issues 是数组，每项包含 type, original, suggested, reason。";
+                "5. 无论在任何情况下，均不得输出除 JSON 对象以外的内容，且JSON对象的长度都不能超过10000字节。\n" +
+                "6. 无论在任何情况下，修改后的文章都必须使用英文，且不能超过1500字。\n" +
+                "7. 输出 JSON 对象，字段为: correctedText, summary, issues。\n" +
+                "8. issues 是数组，每项包含 type, original, suggested, reason。";
+
+        String requirementsLine = (requirements == null || requirements.isBlank())
+            ? ""
+            : "附加要求: " + requirements.trim() + "\n";
 
         String userPrompt = "学习级别: " + level + "\n" +
+            requirementsLine +
             "原文: \n" + text + "\n\n" +
             "请仅输出 JSON 对象。";
 
