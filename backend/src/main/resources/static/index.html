@@ -143,9 +143,6 @@
     <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
       <button @click="submit" :disabled="loading">{{ loading ? '分析中...' : '生成修改建议' }}</button>
     </div>
-    <div class="muted" style="margin-top:8px;">
-      访问令牌自动获取，有效期 10 分钟。
-    </div>
     <div v-if="error" class="error">{{ error }}</div>
   </div>
 
