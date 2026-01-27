@@ -1,9 +1,14 @@
 server:
   port: 8080
+  address: 0.0.0.0
 spring:
   jackson:
     serialization:
       indent_output: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 keyvault:
   url: "https://vibeteacher-kv.vault.azure.net/"
