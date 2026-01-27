@@ -34,7 +34,7 @@
     }
     h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: clamp(22px, 2.6vw, 30px);
     }
     .card {
       background: var(--card);
@@ -42,6 +42,11 @@
       border-radius: 12px;
       padding: 20px;
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .form-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .grid {
       display: grid;
@@ -107,6 +112,99 @@
       color: #dc2626;
       margin-top: 10px;
     }
+    .input-toggle {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .input-toggle button {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .input-toggle button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .camera-box {
+      margin-top: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f9fafb;
+    }
+    .camera-box video,
+    .camera-box canvas,
+    .camera-box img {
+      width: 100%;
+      max-height: 360px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #111827;
+    }
+    .camera-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* 平板与小屏适配 */
+    @media (max-width: 1024px) {
+      .container {
+        max-width: 960px;
+      }
+    }
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 0 12px 32px;
+      }
+      .card {
+        padding: 16px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      textarea {
+        min-height: 140px;
+      }
+      button {
+        width: 100%;
+      }
+      .results {
+        gap: 12px;
+      }
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 12px auto;
+        padding: 0 10px 24px;
+      }
+      .card {
+        padding: 14px;
+        border-radius: 10px;
+      }
+      input, select, textarea {
+        font-size: 13px;
+      }
+      button {
+        font-size: 14px;
+      }
+    }
+    /* 横竖屏适配 */
+    @media (orientation: landscape) and (max-width: 1024px) {
+      .container {
+        margin: 16px auto;
+      }
+      textarea {
+        min-height: 120px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -140,6 +238,26 @@
     </div>
     <div style="margin-top:16px;">
       <label>英文写作片段</label>
+      <div class="input-toggle" style="margin: 8px 0 6px;">
+        <button type="button" :class="{ active: inputMode === 'text' }" @click="switchMode('text')">打字输入</button>
+        <button type="button" :class="{ active: inputMode === 'ocr' }" @click="switchMode('ocr')">拍照/图片识别</button>
+      </div>
+      <div v-if="inputMode === 'ocr'" class="camera-box">
+        <div class="muted">可直接拍照或选择图片，识别后自动填入文本框。</div>
+        <video v-if="showCamera" ref="cameraVideo" autoplay playsinline></video>
+        <canvas v-if="showCamera" ref="cameraCanvas" style="display:none;"></canvas>
+        <div class="camera-actions">
+          <button type="button" @click="startCamera" :disabled="ocrLoading">打开相机</button>
+          <button type="button" @click="capturePhoto" :disabled="!showCamera || ocrLoading">拍照识别</button>
+          <button type="button" @click="stopCamera" :disabled="!showCamera || ocrLoading">关闭相机</button>
+          <label style="display:inline-flex; align-items:center; gap:8px;">
+            <input ref="fileInput" type="file" accept="image/*" style="display:none;" @change="onFileChange" />
+            <button type="button" @click="$refs.fileInput.click()" :disabled="ocrLoading">选择图片</button>
+          </label>
+        </div>
+        <div v-if="ocrLoading" class="hint">正在识别，请稍候...</div>
+        <div v-if="ocrError" class="error">{{ ocrError }}</div>
+      </div>
       <textarea v-model="form.text" placeholder="请输入英文段落..."></textarea>
     </div>
     <div style="margin-top:16px;">
@@ -196,7 +314,12 @@ createApp({
         requirements: ''
       },
       sessionToken: '',
-      tokenExpiresAt: 0
+      tokenExpiresAt: 0,
+      inputMode: 'text',
+      ocrLoading: false,
+      ocrError: '',
+      showCamera: false,
+      cameraStream: null
     };
   },
   mounted() {
@@ -211,8 +334,95 @@ createApp({
   },
   watch: {},
   methods: {
+    switchMode(mode) {
+      this.inputMode = mode;
+      if (mode !== 'ocr') {
+        this.stopCamera();
+      }
+    },
     isTokenValid() {
       return this.sessionToken && Date.now() < this.tokenExpiresAt * 1000;
+    },
+    async startCamera() {
+      this.ocrError = '';
+      if (this.showCamera) {
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        this.cameraStream = stream;
+        this.showCamera = true;
+        this.$nextTick(() => {
+          if (this.$refs.cameraVideo) {
+            this.$refs.cameraVideo.srcObject = stream;
+          }
+        });
+      } catch (err) {
+        this.ocrError = '无法打开相机，请检查浏览器权限。';
+      }
+    },
+    stopCamera() {
+      if (this.cameraStream) {
+        this.cameraStream.getTracks().forEach((track) => track.stop());
+        this.cameraStream = null;
+      }
+      this.showCamera = false;
+    },
+    async capturePhoto() {
+      this.ocrError = '';
+      if (!this.$refs.cameraVideo || !this.$refs.cameraCanvas) {
+        return;
+      }
+      const video = this.$refs.cameraVideo;
+      const canvas = this.$refs.cameraCanvas;
+      const width = video.videoWidth || 1280;
+      const height = video.videoHeight || 720;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          await this.runOcrFromBlob(blob);
+        }
+      }, 'image/jpeg', 0.9);
+    },
+    async onFileChange(event) {
+      this.ocrError = '';
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        return;
+      }
+      await this.runOcrFromBlob(file);
+      event.target.value = '';
+    },
+    async runOcrFromBlob(blob) {
+      this.ocrLoading = true;
+      this.ocrError = '';
+      try {
+        const file = blob instanceof File ? blob : new File([blob], 'ocr.jpg', { type: blob.type || 'image/jpeg' });
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('/api/ocr', {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || '识别失败');
+        }
+        const data = await response.json();
+        const text = (data && data.text) ? data.text.trim() : '';
+        if (!text) {
+          this.ocrError = '未识别到文本，请换一张更清晰的图片。';
+        } else {
+          this.form.text = text;
+        }
+      } catch (err) {
+        this.ocrError = err.message || '识别失败，请重试。';
+      } finally {
+        this.ocrLoading = false;
+      }
     },
     async requestRevise() {
       return fetch('/api/revise', {
