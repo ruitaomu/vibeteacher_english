@@ -4,3 +4,4 @@
 **/*.iml
 backend/*.jar
 backend/target/app.zip
+federated-credential.json
