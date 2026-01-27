@@ -18,8 +18,21 @@ import java.util.List;
 @Service
 public class OpenAIService {
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final KeyVaultService keyVaultService;
 
-    public RevisionResponse revise(String endpoint, String apiKey, String model, String level, String text) {
+    public OpenAIService(KeyVaultService keyVaultService) {
+        this.keyVaultService = keyVaultService;
+    }
+
+    public RevisionResponse revise(String model, String level, String text) {
+        String apiKey = keyVaultService.getApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("未配置 Key Vault API KEY");
+        }
+        String endpoint = keyVaultService.getEndpoint();
+        if (endpoint == null || endpoint.isBlank()) {
+            throw new IllegalStateException("未配置 Key Vault ENDPOINT");
+        }
         OpenAIClient client = OpenAIOkHttpClient.builder()
                 .apiKey(apiKey)
                 .baseUrl(endpoint)

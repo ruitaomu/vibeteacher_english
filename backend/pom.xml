@@ -28,6 +28,16 @@
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-identity</artifactId>
+      <version>1.12.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-security-keyvault-secrets</artifactId>
+      <version>4.7.3</version>
+    </dependency>
+    <dependency>
       <groupId>com.openai</groupId>
       <artifactId>openai-java-core</artifactId>
       <version>${openai.version}</version>

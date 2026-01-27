@@ -117,7 +117,7 @@
   </header>
 
   <div class="card">
-    <div class="grid">
+    <div class="form-grid">
       <div>
         <label>学习级别</label>
         <select v-model="form.level">
@@ -132,16 +132,8 @@
         </select>
       </div>
       <div>
-        <label>模型名称</label>
-        <input v-model="form.model" placeholder="例如：gpt-4.1-mini" />
-      </div>
-      <div>
-        <label>API 终结点</label>
-        <input v-model="form.endpoint" placeholder="https://api.openai.com/v1" />
-      </div>
-      <div>
-        <label>API KEY</label>
-        <input v-model="form.apiKey" type="password" placeholder="运行时输入，不会被保存" />
+        <label>模型</label>
+        <input v-model="form.model" placeholder="gpt-5.2" />
       </div>
     </div>
     <div style="margin-top:16px;">
@@ -150,7 +142,9 @@
     </div>
     <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
       <button @click="submit" :disabled="loading">{{ loading ? '分析中...' : '生成修改建议' }}</button>
-      <span class="muted">不会保存你的 API KEY 和文本。</span>
+    </div>
+    <div class="muted" style="margin-top:8px;">
+      访问令牌自动获取，有效期 10 分钟。
     </div>
     <div v-if="error" class="error">{{ error }}</div>
   </div>
@@ -182,6 +176,10 @@
 
 <script>
 const { createApp } = Vue;
+const STORAGE_KEYS = {
+  token: 'writing-assistant.token',
+  tokenExpiresAt: 'writing-assistant.tokenExpiresAt'
+};
 
 createApp({
   data() {
@@ -192,13 +190,54 @@ createApp({
       form: {
         level: '中学7年级',
         model: 'gpt-5.2',
-        endpoint: 'https://<sitename>-<region>-resource.cognitiveservices.azure.com/openai/v1/',
-        apiKey: '',
         text: ''
-      }
+      },
+      sessionToken: '',
+      tokenExpiresAt: 0
     };
   },
+  mounted() {
+    const savedToken = sessionStorage.getItem(STORAGE_KEYS.token);
+    const savedTokenExpiresAt = Number(sessionStorage.getItem(STORAGE_KEYS.tokenExpiresAt) || 0);
+    if (savedToken && Date.now() < savedTokenExpiresAt * 1000) {
+      this.sessionToken = savedToken;
+      this.tokenExpiresAt = savedTokenExpiresAt;
+    } else {
+      this.getSessionToken();
+    }
+  },
+  watch: {},
   methods: {
+    isTokenValid() {
+      return this.sessionToken && Date.now() < this.tokenExpiresAt * 1000;
+    },
+    async requestRevise() {
+      return fetch('/api/revise', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.sessionToken}`
+        },
+        body: JSON.stringify(this.form)
+      });
+    },
+    async getSessionToken() {
+      this.error = '';
+      try {
+        const response = await fetch('/api/session', { method: 'POST' });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || '获取令牌失败');
+        }
+        const data = await response.json();
+        this.sessionToken = data.token;
+        this.tokenExpiresAt = data.expiresAt;
+        sessionStorage.setItem(STORAGE_KEYS.token, data.token);
+        sessionStorage.setItem(STORAGE_KEYS.tokenExpiresAt, String(data.expiresAt));
+      } catch (err) {
+        this.error = err.message || '获取令牌失败';
+      }
+    },
     async submit() {
       this.error = '';
       this.result = null;
@@ -206,21 +245,28 @@ createApp({
         this.error = '请输入英文片段。';
         return;
       }
-      if (!this.form.apiKey.trim()) {
-        this.error = '请输入 API KEY。';
-        return;
-      }
       if (!this.form.model.trim()) {
         this.error = '请输入模型名称。';
         return;
       }
+      if (!this.isTokenValid()) {
+        await this.getSessionToken();
+        if (!this.isTokenValid()) {
+          this.error = '无法获取访问令牌，请稍后再试。';
+          return;
+        }
+      }
       this.loading = true;
       try {
-        const response = await fetch('/api/revise', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.form)
-        });
+        let response = await this.requestRevise();
+        if (response.status === 401) {
+          await this.getSessionToken();
+          if (!this.isTokenValid()) {
+            this.error = '无法获取访问令牌，请稍后再试。';
+            return;
+          }
+          response = await this.requestRevise();
+        }
         if (!response.ok) {
           const text = await response.text();
           throw new Error(text || '请求失败');

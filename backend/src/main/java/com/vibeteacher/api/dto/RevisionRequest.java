@@ -4,8 +4,6 @@ public class RevisionRequest {
     private String level;
     private String text;
     private String model;
-    private String apiKey;
-    private String endpoint;
 
     public String getLevel() {
         return level;
@@ -31,19 +29,4 @@ public class RevisionRequest {
         this.model = model;
     }
 
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
-
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
 }

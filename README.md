@@ -53,9 +53,48 @@ az webapp deploy --resource-group vibeteacher-rg --name <你的站点名> --src-
 https://<你的站点名>.azurewebsites.net
 ```
 
-## DevOps 自动化（GitHub Actions 示例）
-如需我帮你生成 GitHub Actions 工作流文件，请告诉我仓库地址与要使用的 Azure 凭据方式（Publish Profile 或 OIDC）。
+## DevOps 自动化（GitHub Actions + OIDC）
+
+### 1) GitHub Actions 工作流
+工作流文件位于 [.github/workflows/azure-deploy.yml](.github/workflows/azure-deploy.yml)。
+
+### 2) 创建 Azure AD 应用与 OIDC 联邦
+> 需要在 Azure 中创建一个应用（服务主体）并授予资源组权限，然后为 GitHub Actions 配置联邦凭据。
+
+示例步骤：
+1. 创建应用
+2. 创建服务主体
+3. 赋予资源组权限（Contributor）
+4. 添加 GitHub Actions OIDC 联邦凭据（subject 使用仓库 main 分支）
+
+### 3) 在 GitHub 设置 Secrets
+进入仓库 → Settings → Secrets and variables → Actions → New repository secret，新增：
+- AZURE_CLIENT_ID
+- AZURE_TENANT_ID
+- AZURE_SUBSCRIPTION_ID
+
+### 4) 触发部署
+推送到 main 分支或在 Actions 页面手动触发即可。
+
+## Azure Key Vault 与托管身份配置
+为了避免前端保存或暴露 API KEY，后端通过托管身份从 Key Vault 读取密钥，并向前端下发短期访问令牌。
+
+### 1) 启用 App Service 系统分配托管身份
+Azure Portal → App Service → Identity → System assigned → On
+
+### 2) Key Vault 设置机密
+在 Key Vault 中创建 Secret（例如 `OPENAI_API_KEY`）。
+
+### 3) 授权 Key Vault 访问
+为 App Service 的托管身份授予 `Secret Get` 权限：
+- Key Vault → Access policies（或 Access control/IAM）
+- 添加身份并授予 Secret 读取权限
+
+### 4) 配置应用参数
+在 App Service → Configuration 添加以下应用设置：
+- keyvault.url = https://<你的KeyVault名>.vault.azure.net/
+- keyvault.secretName = <Secret 名称>
 
 ## 注意
 - 该应用仅支持 OpenAI 兼容的 v1 终结点。
-- API KEY 只在内存中使用，不会写入日志或配置文件。
+- API KEY 仅由后端从 Key Vault 读取，不在前端保存，也不会写入日志或配置文件。
