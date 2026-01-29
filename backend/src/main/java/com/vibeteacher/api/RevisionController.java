@@ -49,7 +49,13 @@ public class RevisionController {
         }
         String level = request.getLevel() == null ? "中学7年级" : request.getLevel();
 
-        RevisionResponse response = openAIService.revise(request.getModel(), level, request.getText(), request.getRequirements());
+        RevisionResponse response = openAIService.revise(
+            request.getModel(),
+            level,
+            request.getText(),
+            request.getRequirements(),
+            request.isExpand()
+        );
         return ResponseEntity.ok(response);
     }
 }

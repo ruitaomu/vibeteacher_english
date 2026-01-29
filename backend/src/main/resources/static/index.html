@@ -246,7 +246,7 @@
       </div>
       <div>
         <label>模型</label>
-        <input v-model="form.model" placeholder="gpt-5.2" />
+        <input v-model="form.model" placeholder="gpt-5.2" disabled />
       </div>
     </div>
     <div style="margin-top:16px;">
@@ -280,6 +280,10 @@
     </div>
     <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
       <button @click="submit" :disabled="loading">{{ loading ? '分析中...' : '生成修改建议' }}</button>
+      <label class="muted" style="display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
+        <input type="checkbox" v-model="form.expand" />
+        需要扩写
+      </label>
     </div>
     <div v-if="error" class="error">{{ error }}</div>
   </div>
@@ -325,7 +329,8 @@ createApp({
         level: '中学7年级',
         model: 'gpt-5.2',
         text: '',
-        requirements: ''
+        requirements: '',
+        expand: false
       },
       sessionToken: '',
       tokenExpiresAt: 0,

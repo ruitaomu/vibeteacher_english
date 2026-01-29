@@ -5,6 +5,7 @@ public class RevisionRequest {
     private String text;
     private String model;
     private String requirements;
+    private boolean expand;
 
     public String getLevel() {
         return level;
@@ -36,6 +37,14 @@ public class RevisionRequest {
 
     public void setRequirements(String requirements) {
         this.requirements = requirements;
+    }
+
+    public boolean isExpand() {
+        return expand;
+    }
+
+    public void setExpand(boolean expand) {
+        this.expand = expand;
     }
 
 }
