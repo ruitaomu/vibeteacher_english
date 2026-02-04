@@ -1,22 +1,23 @@
 package com.vibeteacher.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseOutputItem;
-import com.openai.models.responses.ResponseOutputMessage;
-import com.openai.models.responses.Response;
-import com.openai.models.ResponsesModel;
-import com.vibeteacher.api.dto.RevisionResponse;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ResponsesModel;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.ResponseOutputItem;
+import com.openai.models.responses.ResponseOutputMessage;
+import com.vibeteacher.api.dto.RevisionResponse;
 
 @Service
 public class OpenAIService {
@@ -44,11 +45,11 @@ public class OpenAIService {
                 .apiKey(apiKey)
                 .baseUrl(endpoint)
                 .build();
-
+ 
         String levelGuidance = buildLevelGuidance(level);
         String systemPrompt = "你是英语写作学习助手。你的任务是根据指定学习级别（中学7-12年级、大学英语四级、大学英语六级、TOFEL写作、GRE写作）对英文短文进行修改建议。\n" +
                 "整体要求：\n" +
-                "1. 不改变原文意思。\n" +
+                "1. 不要改变原文意思。\n" +
                 "2. 识别语法、时态、词汇、拼写、句子结构问题。\n" +
                 "3. 检查是否存在句式过于简单、用词过于基础、明显低于该年级水平的情况，并给出升级建议。\n" +
                 "4. 修改意见必须使用中文。\n" +
