@@ -61,11 +61,64 @@ https://<你的站点名>.azurewebsites.net
 ### 2) 创建 Azure AD 应用与 OIDC 联邦
 > 需要在 Azure 中创建一个应用（服务主体）并授予资源组权限，然后为 GitHub Actions 配置联邦凭据。
 
-示例步骤：
-1. 创建应用
-2. 创建服务主体
-3. 赋予资源组权限（Contributor）
-4. 添加 GitHub Actions OIDC 联邦凭据（subject 使用仓库 main 分支）
+按下面步骤在本地终端执行（PowerShell）：
+
+1. 先登录并切换订阅
+```bash
+az login
+az account set --subscription <你的订阅ID>
+```
+
+2. 定义变量（把值替换成你的实际值）
+```bash
+$SUBSCRIPTION_ID="<你的订阅ID>"
+$TENANT_ID="<你的租户ID>"
+$RESOURCE_GROUP="vibeteacher-rg"
+$APP_NAME="vibeteacher-github-actions"
+$GITHUB_OWNER="<你的GitHub用户名>"
+$GITHUB_REPO="vibeteacher_english"
+```
+
+3. 创建 Azure AD 应用（App Registration）
+```bash
+$APP_ID = az ad app create --display-name $APP_NAME --query appId -o tsv
+```
+
+4. 创建服务主体（Service Principal）
+```bash
+az ad sp create --id $APP_ID
+```
+
+5. 给资源组授予 Contributor 权限
+```bash
+az role assignment create --assignee $APP_ID --role Contributor --scope "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP"
+```
+
+6. 创建 GitHub Actions OIDC 联邦凭据（main 分支）
+```bash
+$payload = @"
+{
+	"name": "github-main",
+	"issuer": "https://token.actions.githubusercontent.com",
+	"subject": "repo:$GITHUB_OWNER/$GITHUB_REPO:ref:refs/heads/main",
+	"audiences": ["api://AzureADTokenExchange"]
+}
+"@
+
+az ad app federated-credential create --id $APP_ID --parameters $payload
+```
+
+7. 验证联邦凭据是否已创建
+```bash
+az ad app federated-credential list --id $APP_ID -o table
+```
+
+8. 记录后续要写入 GitHub Secrets 的值
+```bash
+echo "AZURE_CLIENT_ID=$APP_ID"
+echo "AZURE_TENANT_ID=$TENANT_ID"
+echo "AZURE_SUBSCRIPTION_ID=$SUBSCRIPTION_ID"
+```
 
 ### 3) 在 GitHub 设置 Secrets
 进入仓库 → Settings → Secrets and variables → Actions → New repository secret，新增：
