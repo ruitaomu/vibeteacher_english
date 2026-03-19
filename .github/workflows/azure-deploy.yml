@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  AZURE_WEBAPP_NAME: vibeteacher-english
+  AZURE_WEBAPP_NAME: vibeteacher
   AZURE_RESOURCE_GROUP: vibeteacher-rg
   JAVA_VERSION: "17"
 
