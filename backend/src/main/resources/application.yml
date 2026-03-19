@@ -12,12 +12,7 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
-keyvault:
-  url: "https://vibeteacher-kv.vault.azure.net/"
-  secretName: "AZUREOPENAI-APIKEY"
-  endpointSecretName: "AZUREOPENAI-ENDPOINT"
-  ocrSecretName: "AZUREOCR-APIKEY"
-  ocrEndpointSecretName: "AZUREOCR-ENDPOINT"
+
 
 
 # 本地调试示例（可按需启用）
