@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/achievements/achievements",
+    "pages/vocabulary/vocabulary"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#2563eb",
+    "navigationBarTitleText": "英语写作学习助手",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f6f7fb"
+  },
+  "tabBar": {
+    "color": "#6b7280",
+    "selectedColor": "#2563eb",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "写作练习",
+        "iconPath": "assets/icons/write.png",
+        "selectedIconPath": "assets/icons/write-active.png"
+      },
+      {
+        "pagePath": "pages/achievements/achievements",
+        "text": "我的成就",
+        "iconPath": "assets/icons/trophy.png",
+        "selectedIconPath": "assets/icons/trophy-active.png"
+      },
+      {
+        "pagePath": "pages/vocabulary/vocabulary",
+        "text": "词汇本",
+        "iconPath": "assets/icons/book.png",
+        "selectedIconPath": "assets/icons/book-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

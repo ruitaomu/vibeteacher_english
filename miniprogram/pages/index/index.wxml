@@ -1,0 +1,120 @@
+<!-- pages/index/index.wxml — Writing assistant page -->
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">英语写作学习助手</text>
+    <text class="page-subtitle">选择级别，输入英文写作片段，获取修改建议与词汇推荐。</text>
+  </view>
+
+  <!-- Input Card -->
+  <view class="card">
+    <!-- Level selector -->
+    <view class="form-group">
+      <text class="form-label">学习级别</text>
+      <picker mode="selector" range="{{levels}}" value="{{levelIndex}}" bindchange="onLevelChange">
+        <view class="picker-value">{{form.level}} ▾</view>
+      </picker>
+    </view>
+
+    <!-- Model selector -->
+    <view class="form-group">
+      <text class="form-label">模型</text>
+      <picker mode="selector" range="{{models}}" value="{{modelIndex}}" bindchange="onModelChange">
+        <view class="picker-value">{{form.model}} ▾</view>
+      </picker>
+    </view>
+
+    <!-- English text input -->
+    <view class="form-group">
+      <text class="form-label">英文写作片段</text>
+      <textarea
+        class="textarea"
+        placeholder="请输入英文段落..."
+        value="{{form.text}}"
+        bindinput="onTextInput"
+        auto-height
+        maxlength="3000"
+      />
+    </view>
+
+    <!-- Extra requirements -->
+    <view class="form-group">
+      <text class="form-label">附加修改要求（可选）</text>
+      <textarea
+        class="textarea textarea-sm"
+        placeholder="如：更正式、用词更高级、句式更丰富..."
+        value="{{form.requirements}}"
+        bindinput="onRequirementsInput"
+        auto-height
+        maxlength="500"
+      />
+    </view>
+
+    <!-- Expand toggle -->
+    <view class="form-group form-row">
+      <switch checked="{{form.expand}}" bindchange="onExpandChange" color="#2563eb" />
+      <text class="muted" style="margin-left:16rpx;">需要扩写</text>
+    </view>
+
+    <!-- Submit button -->
+    <button class="btn-primary" disabled="{{loading}}" bindtap="submit">
+      {{loading ? '分析中...' : '生成修改建议'}}
+    </button>
+
+    <!-- Error -->
+    <text wx:if="{{error}}" class="error-text">{{error}}</text>
+  </view>
+
+  <!-- Results -->
+  <block wx:if="{{result}}">
+    <!-- Corrected text -->
+    <view class="card">
+      <text class="section-title">修正后的文本</text>
+      <text class="result-text">{{result.correctedText || '未返回修正文本'}}</text>
+    </view>
+
+    <!-- Summary -->
+    <view class="card">
+      <text class="section-title">修改总结</text>
+      <text class="result-text">{{result.summary || '未返回总结'}}</text>
+    </view>
+
+    <!-- Issues -->
+    <view class="card">
+      <text class="section-title">修改建议与原因</text>
+      <block wx:if="{{result.issues && result.issues.length > 0}}">
+        <view wx:for="{{result.issues}}" wx:key="index" class="issue-item">
+          <text class="pill">{{item.type || '建议'}}</text>
+          <view class="issue-row"><text class="issue-label">原句：</text><text>{{item.original}}</text></view>
+          <view class="issue-row"><text class="issue-label">建议：</text><text>{{item.suggested}}</text></view>
+          <view class="issue-row"><text class="issue-label muted">原因：</text><text class="muted">{{item.reason}}</text></view>
+        </view>
+      </block>
+      <text wx:else class="muted">未返回结构化建议列表。</text>
+    </view>
+
+    <!-- Vocabulary suggestions -->
+    <view wx:if="{{result.vocabularySuggestions && result.vocabularySuggestions.length > 0}}" class="card">
+      <text class="section-title">📖 本次词汇推荐</text>
+      <text class="muted" style="display:block;margin-bottom:16rpx;">已自动加入词汇本</text>
+      <view wx:for="{{result.vocabularySuggestions}}" wx:key="index" class="vocab-item">
+        <view class="vocab-word">{{item.word}}</view>
+        <view class="vocab-translation">{{item.translation}}</view>
+        <view class="vocab-example muted">{{item.exampleSentence}}</view>
+      </view>
+      <button class="btn-link" bindtap="goToVocabulary">查看词汇本 →</button>
+    </view>
+
+    <!-- New achievements -->
+    <view wx:if="{{newAchievements && newAchievements.length > 0}}" class="card achievement-banner">
+      <text class="section-title">🎉 获得新成就！</text>
+      <view wx:for="{{newAchievements}}" wx:key="id" class="achievement-new">
+        <text class="achievement-icon">{{item.icon}}</text>
+        <view>
+          <text class="achievement-name">{{item.name}}</text>
+          <text class="achievement-desc muted">{{item.description}}</text>
+        </view>
+      </view>
+      <button class="btn-link" bindtap="goToAchievements">查看全部成就 →</button>
+    </view>
+  </block>
+</view>

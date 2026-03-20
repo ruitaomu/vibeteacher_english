@@ -1,0 +1,89 @@
+/* app.wxss — Global styles for VibeTeacher English Mini-Program */
+
+page {
+  background-color: #f6f7fb;
+  color: #1f2937;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  font-size: 28rpx;
+}
+
+/* ── Cards ── */
+.card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 24rpx rgba(15, 23, 42, 0.06);
+}
+
+/* ── Typography ── */
+.page-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8rpx;
+}
+
+.page-subtitle {
+  font-size: 26rpx;
+  color: #6b7280;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16rpx;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 26rpx;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 12rpx;
+  padding: 24rpx 32rpx;
+  font-size: 30rpx;
+  text-align: center;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-primary[disabled] {
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #1f2937;
+  border: none;
+  border-radius: 12rpx;
+  padding: 20rpx 28rpx;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+/* ── Error ── */
+.error-text {
+  color: #dc2626;
+  font-size: 26rpx;
+  margin-top: 12rpx;
+}
+
+/* ── Pill badge ── */
+.pill {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  margin-bottom: 10rpx;
+}

@@ -6,6 +6,7 @@ public class RevisionResponse {
     private String correctedText;
     private String summary;
     private List<Issue> issues;
+    private List<VocabularyItem> vocabularySuggestions;
     private String rawOutput;
 
     public String getCorrectedText() {
@@ -30,6 +31,14 @@ public class RevisionResponse {
 
     public void setIssues(List<Issue> issues) {
         this.issues = issues;
+    }
+
+    public List<VocabularyItem> getVocabularySuggestions() {
+        return vocabularySuggestions;
+    }
+
+    public void setVocabularySuggestions(List<VocabularyItem> vocabularySuggestions) {
+        this.vocabularySuggestions = vocabularySuggestions;
     }
 
     public String getRawOutput() {

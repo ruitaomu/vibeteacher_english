@@ -1,0 +1,53 @@
+<!-- pages/achievements/achievements.wxml -->
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">我的成就</text>
+    <text class="page-subtitle">坚持练习，解锁更多成就！</text>
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-box">
+    <text class="muted">加载中...</text>
+  </view>
+
+  <!-- Error -->
+  <text wx:elif="{{error}}" class="error-text">{{error}}</text>
+
+  <!-- Stats -->
+  <view wx:elif="{{stats}}" class="card stats-card">
+    <text class="section-title">学习统计</text>
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value">{{stats.totalSubmissions}}</text>
+        <text class="stat-label">总提交次数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.currentStreak}}</text>
+        <text class="stat-label">当前连续天数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.longestStreak}}</text>
+        <text class="stat-label">最长连续天数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.vocabularyCount}}</text>
+        <text class="stat-label">词汇量</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Achievements list -->
+  <view wx:if="{{!loading && !error}}" class="card">
+    <text class="section-title">成就列表</text>
+    <view wx:for="{{achievements}}" wx:key="id" class="achievement-row {{item.earned ? 'earned' : 'locked'}}">
+      <view class="achievement-icon-box">
+        <text class="achievement-icon">{{item.earned ? item.icon : '🔒'}}</text>
+      </view>
+      <view class="achievement-content">
+        <text class="achievement-name">{{item.name}}</text>
+        <text class="achievement-desc muted">{{item.description}}</text>
+      </view>
+      <view wx:if="{{item.earned}}" class="earned-badge">已获得</view>
+    </view>
+  </view>
+</view>

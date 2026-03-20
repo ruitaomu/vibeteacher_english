@@ -1,0 +1,49 @@
+<!-- pages/vocabulary/vocabulary.wxml -->
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">词汇本</text>
+    <text class="page-subtitle">每次练习积累的词汇都会自动收录在这里。</text>
+  </view>
+
+  <!-- Search bar -->
+  <view class="search-box">
+    <input
+      class="search-input"
+      placeholder="搜索单词或中文释义..."
+      value="{{searchText}}"
+      bindinput="onSearch"
+    />
+  </view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-box">
+    <text class="muted">加载中...</text>
+  </view>
+
+  <!-- Error -->
+  <text wx:elif="{{error}}" class="error-text">{{error}}</text>
+
+  <!-- Empty state -->
+  <view wx:elif="{{displayList.length === 0}}" class="empty-box">
+    <text class="empty-icon">📖</text>
+    <text class="empty-title">词汇本为空</text>
+    <text class="muted">完成写作练习后，系统会自动推荐词汇并加入词汇本。</text>
+  </view>
+
+  <!-- Count -->
+  <view wx:elif="{{!loading && !error}}" class="count-row">
+    <text class="muted">共 {{displayList.length}} 个词汇</text>
+  </view>
+
+  <!-- Vocabulary list -->
+  <view wx:if="{{!loading && !error && displayList.length > 0}}" class="vocab-list">
+    <view wx:for="{{displayList}}" wx:key="index" class="card vocab-card">
+      <view class="vocab-word">{{item.word}}</view>
+      <view class="vocab-translation">{{item.translation}}</view>
+      <view wx:if="{{item.exampleSentence}}" class="vocab-example muted">
+        <text class="example-label">例句：</text>
+        <text>{{item.exampleSentence}}</text>
+      </view>
+    </view>
+  </view>
+</view>

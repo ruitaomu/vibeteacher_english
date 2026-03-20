@@ -178,6 +178,13 @@
       color: var(--muted);
       margin-top: 6px;
     }
+    .vocab-item {
+      border-left: 4px solid var(--primary);
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      background: #f9fafb;
+      border-radius: 0 8px 8px 0;
+    }
 
     /* 平板与小屏适配 */
     @media (max-width: 1024px) {
@@ -326,6 +333,13 @@
         </div>
       </div>
       <div v-else class="muted">未返回结构化问题列表。</div>
+    </div>
+    <div v-if="result.vocabularySuggestions && result.vocabularySuggestions.length" class="card">
+      <h3>📖 词汇推荐</h3>
+      <div v-for="(item, index) in result.vocabularySuggestions" :key="index" class="vocab-item">
+        <div><strong>{{ item.word }}</strong> <span class="pill">{{ item.translation }}</span></div>
+        <div class="muted" style="margin-top:4px; font-style:italic;">{{ item.exampleSentence }}</div>
+      </div>
     </div>
   </div>
 </div>

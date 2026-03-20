@@ -18,6 +18,7 @@ import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.ResponseOutputMessage;
 import com.vibeteacher.api.dto.RevisionResponse;
+import com.vibeteacher.api.dto.VocabularyItem;
 
 @Service
 public class OpenAIService {
@@ -55,8 +56,9 @@ public class OpenAIService {
                 "4. 修改意见必须使用中文。\n" +
                 "5. 无论在任何情况下，均不得输出除 JSON 对象以外的内容，且JSON对象的长度都不能超过10000字节。\n" +
                 "6. 无论在任何情况下，修改后的文章都必须使用英文，且不能超过1500字。\n" +
-                "7. 输出 JSON 对象，字段为: correctedText, summary, issues。\n" +
-                "8. issues 是数组，每项包含 type, original, suggested, reason。";
+                "7. 输出 JSON 对象，字段为: correctedText, summary, issues, vocabularySuggestions。\n" +
+                "8. issues 是数组，每项包含 type, original, suggested, reason。\n" +
+                "9. vocabularySuggestions 是数组，从原文中挑选3-5个值得学习或改进的词汇，每项包含 word（英文单词或短语）, translation（中文翻译）, exampleSentence（英文示例句）。";
 
         String requirementsLine = (requirements == null || requirements.isBlank())
             ? ""
@@ -134,6 +136,21 @@ public class OpenAIService {
                     issues.add(issue);
                 }
                 revisionResponse.setIssues(issues);
+            }
+
+            JsonNode vocabNode = node.get("vocabularySuggestions");
+            if (vocabNode != null && vocabNode.isArray()) {
+                List<VocabularyItem> vocab = new ArrayList<>();
+                for (JsonNode vNode : vocabNode) {
+                    VocabularyItem item = new VocabularyItem();
+                    if (vNode.has("word")) item.setWord(vNode.get("word").asText());
+                    if (vNode.has("translation")) item.setTranslation(vNode.get("translation").asText());
+                    if (vNode.has("exampleSentence")) item.setExampleSentence(vNode.get("exampleSentence").asText());
+                    if (item.getWord() != null && !item.getWord().isBlank()) {
+                        vocab.add(item);
+                    }
+                }
+                revisionResponse.setVocabularySuggestions(vocab);
             }
         } catch (Exception ignored) {
         }
