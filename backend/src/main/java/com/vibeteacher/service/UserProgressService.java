@@ -100,7 +100,8 @@ public class UserProgressService {
                 progress.getCurrentStreak(),
                 progress.getLongestStreak(),
                 progress.getVocabulary().size(),
-                progress.getEarnedAchievements().size()
+                progress.getEarnedAchievements().size(),
+                progress.getLastSubmissionDate()
             );
         }
     }

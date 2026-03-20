@@ -1,0 +1,56 @@
+<!-- pages/progress/progress.wxml — 学习进度页面 -->
+<scroll-view scroll-y class="page-scroll">
+  <view class="page-hero card">
+    <view class="hero-title">学习进度</view>
+    <view class="muted">坚持每天练习，看见自己的成长。</view>
+  </view>
+
+  <!-- 统计卡片 -->
+  <view class="stats-row">
+    <view class="stat-card card">
+      <view class="stat-value">{{stats.totalSubmissions || 0}}</view>
+      <view class="stat-label">总提交次数</view>
+    </view>
+    <view class="stat-card card">
+      <view class="stat-value streak-value">{{stats.currentStreak || 0}}</view>
+      <view class="stat-label">连续打卡 🔥</view>
+    </view>
+    <view class="stat-card card">
+      <view class="stat-value">{{stats.vocabularyCount || 0}}</view>
+      <view class="stat-label">积累词汇量</view>
+    </view>
+  </view>
+
+  <!-- 最长连续打卡 -->
+  <view class="card" wx:if="{{stats.longestStreak > 0}}">
+    <view class="section-title">最长连续打卡</view>
+    <view class="streak-best">{{stats.longestStreak}} 天</view>
+  </view>
+
+  <!-- 最后学习时间 -->
+  <view class="card" wx:if="{{stats.lastSubmissionDate}}">
+    <view class="section-title">最近一次学习</view>
+    <view class="date-text">{{stats.lastSubmissionDate}}</view>
+  </view>
+
+  <!-- 成就概览 -->
+  <view class="card" wx:if="{{stats.achievementsCount > 0}}">
+    <view class="section-title">已解锁成就</view>
+    <view class="achievement-count">🏆 {{stats.achievementsCount}} 个成就</view>
+    <view class="view-all" bindtap="goToAchievements">查看全部成就 ›</view>
+  </view>
+
+  <!-- 学习建议 -->
+  <view class="card tip-card">
+    <view class="section-title">学习建议</view>
+    <view class="tip-item">📝 每次写作后查看修改建议并理解原因</view>
+    <view class="tip-item">📚 积累本次推荐词汇，反复复习</view>
+    <view class="tip-item">🔥 保持连续打卡，巩固学习习惯</view>
+    <view class="tip-item">🏆 解锁成就徽章，激励自己进步</view>
+  </view>
+
+  <view wx:if="{{error}}" class="card error-text">{{error}}</view>
+  <view wx:if="{{loading}}" class="card muted center-text">加载中...</view>
+
+  <view style="height: 40rpx;"></view>
+</scroll-view>

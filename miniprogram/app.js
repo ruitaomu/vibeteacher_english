@@ -1,4 +1,6 @@
 // app.js — Global application logic for VibeTeacher English WeChat Mini-Program
+const { generateUserId } = require('./utils/user');
+
 App({
   globalData: {
     userId: '',
@@ -13,7 +15,7 @@ App({
     if (storedUserId) {
       this.globalData.userId = storedUserId;
     } else {
-      const userId = this._generateUserId();
+      const userId = generateUserId();
       this.globalData.userId = userId;
       wx.setStorageSync('userId', userId);
     }
@@ -54,14 +56,6 @@ App({
       this.globalData.sessionToken &&
       Date.now() < this.globalData.tokenExpiresAt * 1000
     );
-  },
-
-  _generateUserId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 32; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
   }
 });
+

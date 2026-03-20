@@ -1,0 +1,89 @@
+/* pages/progress/progress.wxss */
+.page-scroll {
+  height: 100vh;
+}
+
+.page-hero {
+  padding-bottom: 24rpx;
+}
+
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 8rpx;
+}
+
+.stats-row {
+  display: flex;
+  flex-direction: row;
+  padding: 0 16rpx;
+}
+
+.stat-card {
+  flex: 1;
+  text-align: center;
+  margin: 10rpx 8rpx;
+  padding: 28rpx 16rpx;
+}
+
+.stat-value {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1.1;
+}
+
+.streak-value {
+  color: #ea580c;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #6b7280;
+  margin-top: 8rpx;
+}
+
+.streak-best {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #ea580c;
+}
+
+.date-text {
+  font-size: 32rpx;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.achievement-count {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12rpx;
+}
+
+.view-all {
+  font-size: 26rpx;
+  color: #2563eb;
+  margin-top: 8rpx;
+}
+
+.tip-card {
+  margin-top: 4rpx;
+}
+
+.tip-item {
+  font-size: 28rpx;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f3f4f6;
+  line-height: 1.5;
+}
+
+.tip-item:last-child {
+  border-bottom: none;
+}
+
+.center-text {
+  text-align: center;
+}

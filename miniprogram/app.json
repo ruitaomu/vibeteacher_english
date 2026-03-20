@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/progress/progress",
     "pages/achievements/achievements",
     "pages/vocabulary/vocabulary"
   ],
@@ -22,6 +23,12 @@
         "text": "写作练习",
         "iconPath": "assets/icons/write.png",
         "selectedIconPath": "assets/icons/write-active.png"
+      },
+      {
+        "pagePath": "pages/progress/progress",
+        "text": "学习进度",
+        "iconPath": "assets/icons/progress.png",
+        "selectedIconPath": "assets/icons/progress-active.png"
       },
       {
         "pagePath": "pages/achievements/achievements",

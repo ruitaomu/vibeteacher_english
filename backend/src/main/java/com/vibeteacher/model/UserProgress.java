@@ -76,14 +76,16 @@ public class UserProgress {
         private final int longestStreak;
         private final int vocabularyCount;
         private final int achievementsCount;
+        private final LocalDate lastSubmissionDate;
 
         public Stats(int totalSubmissions, int currentStreak, int longestStreak,
-                     int vocabularyCount, int achievementsCount) {
+                     int vocabularyCount, int achievementsCount, LocalDate lastSubmissionDate) {
             this.totalSubmissions = totalSubmissions;
             this.currentStreak = currentStreak;
             this.longestStreak = longestStreak;
             this.vocabularyCount = vocabularyCount;
             this.achievementsCount = achievementsCount;
+            this.lastSubmissionDate = lastSubmissionDate;
         }
 
         public int getTotalSubmissions() { return totalSubmissions; }
@@ -91,5 +93,6 @@ public class UserProgress {
         public int getLongestStreak() { return longestStreak; }
         public int getVocabularyCount() { return vocabularyCount; }
         public int getAchievementsCount() { return achievementsCount; }
+        public LocalDate getLastSubmissionDate() { return lastSubmissionDate; }
     }
 }
