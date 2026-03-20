@@ -144,8 +144,21 @@
     .camera-actions {
       display: flex;
       gap: 10px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      align-items: center;
+      overflow-x: auto;
       margin-top: 10px;
+    }
+    .camera-actions button,
+    .camera-actions .file-button button {
+      width: auto;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .camera-actions .capture-btn {
+      background: #dc2626;
+      border: 2px solid #7f1d1d;
+      color: #fff;
     }
     .file-button {
       position: relative;
@@ -246,7 +259,10 @@
       </div>
       <div>
         <label>模型</label>
-        <input v-model="form.model" placeholder="gpt-5.2" disabled />
+        <select v-model="form.model">
+          <option value="gpt-5.2">gpt-5.2</option>
+          <option value="gpt-5.3-chat">gpt-5.3</option>
+        </select>
       </div>
     </div>
     <div style="margin-top:16px;">
@@ -260,15 +276,17 @@
         <video v-if="showCamera" ref="cameraVideo" autoplay playsinline></video>
         <canvas v-if="showCamera" ref="cameraCanvas" style="display:none;"></canvas>
         <div class="camera-actions">
-          <button type="button" @click="startCamera" :disabled="ocrLoading">打开相机</button>
-          <button type="button" @click="capturePhoto" :disabled="!showCamera || ocrLoading">拍照识别</button>
+          <button type="button" @click="startCamera" :disabled="showCamera || ocrLoading">打开相机</button>
+          <button type="button" class="capture-btn" @click="capturePhoto" :disabled="!showCamera || ocrLoading">📸 拍照识别</button>
           <button type="button" @click="stopCamera" :disabled="!showCamera || ocrLoading">关闭相机</button>
+        </div>
+        <div class="camera-actions">
           <label class="file-button">
-            <button type="button" :disabled="ocrLoading">选择图片</button>
+            <button type="button" :disabled="ocrLoading">📂 选择图片</button>
             <input ref="fileInput" type="file" accept="image/*" @change="onFileChange" />
           </label>
         </div>
-        <div class="hint">支持 JPG/PNG，最大 5MB。</div>
+        <div class="hint">支持 JPG/PNG，最大 20MB。</div>
         <div v-if="ocrLoading" class="hint">正在识别，请稍候...</div>
         <div v-if="ocrError" class="error">{{ ocrError }}</div>
       </div>
@@ -326,7 +344,7 @@ createApp({
       error: '',
       result: null,
       form: {
-        level: '中学7年级',
+        level: '中学12年级',
         model: 'gpt-5.2',
         text: '',
         requirements: '',
@@ -353,9 +371,11 @@ createApp({
   },
   watch: {},
   methods: {
-    switchMode(mode) {
+    async switchMode(mode) {
       this.inputMode = mode;
-      if (mode !== 'ocr') {
+      if (mode === 'ocr') {
+        await this.startCamera();
+      } else {
         this.stopCamera();
       }
     },
