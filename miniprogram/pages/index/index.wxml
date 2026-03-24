@@ -26,6 +26,15 @@
     <!-- English text input -->
     <view class="form-group">
       <text class="form-label">英文写作片段</text>
+      <view class="ocr-toolbar">
+        <button class="btn-secondary ocr-button" plain="true" disabled="{{loading || ocrLoading}}" bindtap="chooseImageForOcr">
+          {{ocrLoading ? '识别中...' : '拍照/图片识别'}}
+        </button>
+        <text class="ocr-hint">支持拍照或从相册导入，识别结果会自动填入文本框。</text>
+      </view>
+      <view wx:if="{{ocrImageName}}" class="ocr-status">
+        <text class="muted">已选择图片：{{ocrImageName}}</text>
+      </view>
       <textarea
         class="textarea"
         placeholder="请输入英文段落..."

@@ -5,6 +5,15 @@
     <text class="page-subtitle">坚持练习，解锁更多成就！</text>
   </view>
 
+  <view wx:if="{{requiresLogin}}" class="card login-card">
+    <text class="section-title">需要微信登录</text>
+    <text class="muted">成就数据会绑定到微信身份。开发联调时请在需要时手动点击登录。</text>
+    <button class="btn-primary login-button" bindtap="handleLoginTap">去登录</button>
+    <text wx:if="{{error}}" class="error-text">{{error}}</text>
+  </view>
+
+  <block wx:else>
+
   <!-- Loading -->
   <view wx:if="{{loading}}" class="loading-box">
     <text class="muted">加载中...</text>
@@ -50,4 +59,6 @@
       <view wx:if="{{item.earned}}" class="earned-badge">已获得</view>
     </view>
   </view>
+
+  </block>
 </view>

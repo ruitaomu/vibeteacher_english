@@ -1,15 +1,21 @@
 package com.vibeteacher.api;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.vibeteacher.api.dto.VocabularyItem;
 import com.vibeteacher.model.Achievement;
 import com.vibeteacher.model.UserProgress;
 import com.vibeteacher.service.UserProgressService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -56,6 +62,26 @@ public class UserProgressController {
         }
         List<VocabularyItem> vocabulary = userProgressService.getVocabulary(userId.trim());
         return ResponseEntity.ok(vocabulary);
+    }
+
+    @GetMapping("/vocabulary/library")
+    public ResponseEntity<?> getVocabularyLibrary(@RequestParam String userId) {
+        return getVocabulary(userId);
+    }
+
+    @PostMapping("/vocabulary/usage")
+    public ResponseEntity<?> recordVocabularyUsage(@RequestParam String userId,
+                                                   @RequestBody Map<String, String> payload) {
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("缺少用户ID");
+        }
+        String text = payload == null ? null : payload.get("text");
+        int usageCount = userProgressService.countSuggestedVocabularyMatches(userId.trim(), text);
+        List<Achievement> newAchievements = userProgressService.recordSuggestedVocabularyUsage(userId.trim(), usageCount);
+        return ResponseEntity.ok(Map.of(
+            "usageCount", usageCount,
+            "newAchievements", newAchievements
+        ));
     }
 
     @GetMapping("/stats")

@@ -5,3 +5,4 @@
 backend/*.jar
 backend/target/app.zip
 federated-credential.json
+data/vibeteacher.mv.db

@@ -5,6 +5,15 @@
     <view class="muted">坚持每天练习，看见自己的成长。</view>
   </view>
 
+  <view wx:if="{{requiresLogin}}" class="card login-card">
+    <view class="section-title">需要微信登录</view>
+    <view class="muted">学习进度属于登录后保存的数据。开发联调时如果微信开发者工具未登录，也不会自动拉起登录。</view>
+    <button class="btn-primary login-button" bindtap="handleLoginTap">去登录</button>
+    <view wx:if="{{error}}" class="error-text">{{error}}</view>
+  </view>
+
+  <block wx:else>
+
   <!-- 统计卡片 -->
   <view class="stats-row">
     <view class="stat-card card">
@@ -51,6 +60,8 @@
 
   <view wx:if="{{error}}" class="card error-text">{{error}}</view>
   <view wx:if="{{loading}}" class="card muted center-text">加载中...</view>
+
+  </block>
 
   <view style="height: 40rpx;"></view>
 </scroll-view>

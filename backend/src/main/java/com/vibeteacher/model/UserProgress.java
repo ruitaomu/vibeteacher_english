@@ -1,12 +1,12 @@
 package com.vibeteacher.model;
 
-import com.vibeteacher.api.dto.VocabularyItem;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.vibeteacher.api.dto.VocabularyItem;
 
 public class UserProgress {
     private final String userId;
@@ -14,6 +14,7 @@ public class UserProgress {
     private LocalDate lastSubmissionDate;
     private int currentStreak;
     private int longestStreak;
+    private int suggestedVocabularyUsageCount;
     private final Set<String> earnedAchievements;
     private final List<VocabularyItem> vocabulary;
 
@@ -22,6 +23,7 @@ public class UserProgress {
         this.totalSubmissions = 0;
         this.currentStreak = 0;
         this.longestStreak = 0;
+        this.suggestedVocabularyUsageCount = 0;
         this.earnedAchievements = new HashSet<>();
         this.vocabulary = new ArrayList<>();
     }
@@ -62,6 +64,14 @@ public class UserProgress {
         this.longestStreak = longestStreak;
     }
 
+    public int getSuggestedVocabularyUsageCount() {
+        return suggestedVocabularyUsageCount;
+    }
+
+    public void setSuggestedVocabularyUsageCount(int suggestedVocabularyUsageCount) {
+        this.suggestedVocabularyUsageCount = suggestedVocabularyUsageCount;
+    }
+
     public Set<String> getEarnedAchievements() {
         return earnedAchievements;
     }
@@ -75,15 +85,18 @@ public class UserProgress {
         private final int currentStreak;
         private final int longestStreak;
         private final int vocabularyCount;
+        private final int suggestedVocabularyUsageCount;
         private final int achievementsCount;
         private final LocalDate lastSubmissionDate;
 
         public Stats(int totalSubmissions, int currentStreak, int longestStreak,
-                     int vocabularyCount, int achievementsCount, LocalDate lastSubmissionDate) {
+                     int vocabularyCount, int suggestedVocabularyUsageCount,
+                     int achievementsCount, LocalDate lastSubmissionDate) {
             this.totalSubmissions = totalSubmissions;
             this.currentStreak = currentStreak;
             this.longestStreak = longestStreak;
             this.vocabularyCount = vocabularyCount;
+            this.suggestedVocabularyUsageCount = suggestedVocabularyUsageCount;
             this.achievementsCount = achievementsCount;
             this.lastSubmissionDate = lastSubmissionDate;
         }
@@ -92,6 +105,7 @@ public class UserProgress {
         public int getCurrentStreak() { return currentStreak; }
         public int getLongestStreak() { return longestStreak; }
         public int getVocabularyCount() { return vocabularyCount; }
+        public int getSuggestedVocabularyUsageCount() { return suggestedVocabularyUsageCount; }
         public int getAchievementsCount() { return achievementsCount; }
         public LocalDate getLastSubmissionDate() { return lastSubmissionDate; }
     }

@@ -161,6 +161,13 @@ echo "AZURE_SUBSCRIPTION_ID=$SUBSCRIPTION_ID"
 	- AZUREOPENAI-ENDPOINT（OpenAI 兼容 endpoint URL）
 	- AZUREOCR-APIKEY（Azure AI Vision Key）
 	- AZUREOCR-ENDPOINT（Azure AI Vision Endpoint）
+	- WECHAT-APP-ID
+  	- WECHAT-APP-SECRET
+  	- MYSQL-DB (Azure MySQL Database Name)
+  	- MYSQL-HOST (Azure MySQL Server Name)
+  	- MYSQL-USERNAME (Azure MySQL Database Admin User Name)
+  	- MYSQL-PASSWORD (Azure MySQL Database Admin Password)
+   	- MYSQL-PORT ((Azure MySQL Port Number)
 
 ### 3) 授权 Key Vault 访问
 建议使用 Azure RBAC 权限模型：

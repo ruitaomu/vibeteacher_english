@@ -4,21 +4,46 @@ server:
 prompt:
   debug: true
 spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/vibeteacher;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   jackson:
     serialization:
       indent_output: true
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+token:
+  secret: ${SESSION_TOKEN_SECRET:}
 
 
 
 
 # 本地调试示例（可按需启用）
-# keyvault:
+keyvault:
 #   url: "https://<your-vault-name>.vault.azure.net/"
 #   secretName: "AZUREOPENAI-APIKEY"
 #   endpointSecretName: "AZUREOPENAI-ENDPOINT"
 #   ocrSecretName: "AZUREOCR-APIKEY"
 #   ocrEndpointSecretName: "AZUREOCR-ENDPOINT"
+  wechatAppIdSecretName: ${KEYVAULT_WECHAT_APP_ID_SECRET_NAME:WECHAT-APP-ID}
+  wechatAppSecretSecretName: ${KEYVAULT_WECHAT_APP_SECRET_SECRET_NAME:WECHAT-APP-SECRET}
+  mysqlDbSecretName: ${KEYVAULT_MYSQL_DB_SECRET_NAME:MYSQL-DB}
+  mysqlHostSecretName: ${KEYVAULT_MYSQL_HOST_SECRET_NAME:MYSQL-HOST}
+  mysqlUsernameSecretName: ${KEYVAULT_MYSQL_USERNAME_SECRET_NAME:MYSQL-USERNAME}
+  mysqlPasswordSecretName: ${KEYVAULT_MYSQL_PASSWORD_SECRET_NAME:MYSQL-PASSWORD}
+  mysqlPortSecretName: ${KEYVAULT_MYSQL_PORT_SECRET_NAME:MYSQL-PORT}

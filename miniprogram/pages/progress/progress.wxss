@@ -7,6 +7,14 @@
   padding-bottom: 24rpx;
 }
 
+.login-card {
+  margin: 0 16rpx 20rpx;
+}
+
+.login-button {
+  margin-top: 24rpx;
+}
+
 .hero-title {
   font-size: 44rpx;
   font-weight: 700;

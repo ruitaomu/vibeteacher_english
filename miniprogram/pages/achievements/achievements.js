@@ -6,15 +6,43 @@ Page({
     loading: true,
     achievements: [],
     stats: null,
-    error: ''
+    error: '',
+    requiresLogin: false
   },
 
   onLoad() {
-    this.loadData();
+    this.ensureLoginThenLoad();
   },
 
   onShow() {
-    this.loadData();
+    this.ensureLoginThenLoad();
+  },
+
+  ensureLoginThenLoad() {
+    const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
+    if (isLoggedIn) {
+      this.setData({ requiresLogin: false });
+      this.loadData();
+      return;
+    }
+
+    this.setData({
+      loading: false,
+      requiresLogin: true,
+      achievements: [],
+      stats: null,
+      error: '登录后可查看我的成就。'
+    });
+  },
+
+  async handleLoginTap() {
+    try {
+      await app.loginWithWechat();
+      this.setData({ error: '', requiresLogin: false });
+      this.loadData();
+    } catch (err) {
+      this.setData({ error: err.message || '登录失败，请稍后重试。' });
+    }
   },
 
   loadData() {

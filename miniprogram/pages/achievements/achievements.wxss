@@ -17,6 +17,14 @@
   margin-bottom: 24rpx;
 }
 
+.login-card {
+  margin-bottom: 24rpx;
+}
+
+.login-button {
+  margin-top: 24rpx;
+}
+
 .stats-grid {
   display: flex;
   flex-direction: row;

@@ -7,15 +7,43 @@ Page({
     vocabulary: [],
     displayList: [],
     error: '',
-    searchText: ''
+    searchText: '',
+    requiresLogin: false
   },
 
   onLoad() {
-    this.loadVocabulary();
+    this.ensureLoginThenLoad();
   },
 
   onShow() {
-    this.loadVocabulary();
+    this.ensureLoginThenLoad();
+  },
+
+  ensureLoginThenLoad() {
+    const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
+    if (isLoggedIn) {
+      this.setData({ requiresLogin: false });
+      this.loadVocabulary();
+      return;
+    }
+
+    this.setData({
+      loading: false,
+      requiresLogin: true,
+      vocabulary: [],
+      displayList: [],
+      error: '登录后可查看词汇本。'
+    });
+  },
+
+  async handleLoginTap() {
+    try {
+      await app.loginWithWechat();
+      this.setData({ error: '', requiresLogin: false });
+      this.loadVocabulary();
+    } catch (err) {
+      this.setData({ error: err.message || '登录失败，请稍后重试。' });
+    }
   },
 
   loadVocabulary() {
@@ -23,7 +51,7 @@ Page({
     this.setData({ loading: true, error: '' });
 
     wx.request({
-      url: `${app.globalData.serverBase}/api/user/vocabulary?userId=${encodeURIComponent(userId)}`,
+      url: `${app.globalData.serverBase}/api/user/vocabulary/library?userId=${encodeURIComponent(userId)}`,
       method: 'GET',
       success: (res) => {
         if (res.statusCode === 200 && Array.isArray(res.data)) {

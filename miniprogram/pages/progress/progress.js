@@ -5,11 +5,38 @@ Page({
   data: {
     stats: {},
     loading: false,
-    error: ''
+    error: '',
+    requiresLogin: false
   },
 
   onShow() {
-    this.loadStats();
+    this.ensureLoginThenLoad();
+  },
+
+  ensureLoginThenLoad() {
+    const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
+    if (isLoggedIn) {
+      this.setData({ requiresLogin: false });
+      this.loadStats();
+      return;
+    }
+
+    this.setData({
+      loading: false,
+      requiresLogin: true,
+      stats: {},
+      error: '登录后可查看学习进度。'
+    });
+  },
+
+  async handleLoginTap() {
+    try {
+      await app.loginWithWechat();
+      this.setData({ error: '', requiresLogin: false });
+      this.loadStats();
+    } catch (err) {
+      this.setData({ error: err.message || '登录失败，请稍后重试。' });
+    }
   },
 
   async loadStats() {

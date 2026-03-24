@@ -2,11 +2,14 @@ package com.vibeteacher.api.dto;
 
 import java.util.List;
 
+import com.vibeteacher.model.Achievement;
+
 public class RevisionResponse {
     private String correctedText;
     private String summary;
     private List<Issue> issues;
     private List<VocabularyItem> vocabularySuggestions;
+    private List<Achievement> newAchievements;
     private String rawOutput;
 
     public String getCorrectedText() {
@@ -39,6 +42,14 @@ public class RevisionResponse {
 
     public void setVocabularySuggestions(List<VocabularyItem> vocabularySuggestions) {
         this.vocabularySuggestions = vocabularySuggestions;
+    }
+
+    public List<Achievement> getNewAchievements() {
+        return newAchievements;
+    }
+
+    public void setNewAchievements(List<Achievement> newAchievements) {
+        this.newAchievements = newAchievements;
     }
 
     public String getRawOutput() {
