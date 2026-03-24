@@ -26,10 +26,16 @@ App({
 
   // Default token fetch: anonymous mode by default.
   // WeChat login is only used for gated pages that require persisted user identity.
-  getSessionToken() {
-    if (this.isTokenValid()) {
+  getSessionToken(options = {}) {
+    const forceRefresh = !!options.forceRefresh;
+    if (!forceRefresh && this.isTokenValid()) {
       return Promise.resolve(this.globalData.sessionToken);
     }
+
+    if (forceRefresh) {
+      this._clearSessionState();
+    }
+
     return this._getAnonymousSessionToken();
   },
 
@@ -112,6 +118,18 @@ App({
         fail: (err) => reject(new Error(err.errMsg || '网络错误'))
       });
     });
+  },
+
+  _clearSessionState() {
+    this.globalData.sessionToken = '';
+    this.globalData.tokenExpiresAt = 0;
+    this.globalData.authMode = 'anonymous';
+    this.globalData.userId = '';
+
+    wx.removeStorageSync('sessionToken');
+    wx.removeStorageSync('tokenExpiresAt');
+    wx.setStorageSync('authMode', 'anonymous');
+    wx.removeStorageSync('userId');
   },
 
   _normalizeWechatLoginError(err) {

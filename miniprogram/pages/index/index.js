@@ -243,7 +243,7 @@ Page({
           if (res.statusCode === 200) {
             resolve(res.data);
           } else if (res.statusCode === 401 && !isRetry) {
-            app.getSessionToken()
+            app.getSessionToken({ forceRefresh: true })
               .then(() => this._requestRevise(true))
               .then(resolve)
               .catch(reject);

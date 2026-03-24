@@ -58,6 +58,46 @@
     <view class="tip-item">🏆 解锁成就徽章，激励自己进步</view>
   </view>
 
+  <!-- 修改历史 -->
+  <view class="card history-card">
+    <view class="section-title">修改历史记录</view>
+
+    <view wx:if="{{historyLoading}}" class="muted">历史记录加载中...</view>
+    <view wx:if="{{historyError}}" class="error-text">{{historyError}}</view>
+
+    <view wx:if="{{!historyLoading && !historyError && !historyRecord}}" class="muted">
+      暂无历史记录。完成一次改写后会自动出现在这里。
+    </view>
+
+    <view wx:if="{{!historyLoading && historyRecord}}">
+      <view class="history-meta">
+        <text class="history-time">{{historyRecord.createdAt || '-'}}</text>
+        <text class="history-level">{{historyRecord.level || '未设置级别'}}</text>
+      </view>
+
+      <view class="history-block">
+        <view class="history-label">原文</view>
+        <view class="history-text">{{historyRecord.sourceText || '-'}}</view>
+      </view>
+
+      <view class="history-block">
+        <view class="history-label">修改后</view>
+        <view class="history-text">{{historyRecord.correctedText || '-'}}</view>
+      </view>
+
+      <view class="history-block" wx:if="{{historyRecord.summary}}">
+        <view class="history-label">总结</view>
+        <view class="history-text">{{historyRecord.summary}}</view>
+      </view>
+
+      <view class="history-pager" wx:if="{{historyTotalPages > 0}}">
+        <button class="pager-btn" size="mini" bindtap="viewPreviousHistory" disabled="{{!historyHasPrevious || historyLoading}}">上一条</button>
+        <view class="pager-info">{{historyPage + 1}} / {{historyTotalPages}}</view>
+        <button class="pager-btn" size="mini" bindtap="viewNextHistory" disabled="{{!historyHasNext || historyLoading}}">下一条</button>
+      </view>
+    </view>
+  </view>
+
   <view wx:if="{{error}}" class="card error-text">{{error}}</view>
   <view wx:if="{{loading}}" class="card muted center-text">加载中...</view>
 
