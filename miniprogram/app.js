@@ -23,8 +23,16 @@ App({
       this.globalData.authMode = authMode;
       this.globalData.userId = authMode === 'wechat' ? userId : '';
     }
+  
+    // Enable share menu globally so right-top "转发" option appears when pages define onShareAppMessage
+    try {
+      if (wx && wx.showShareMenu) {
+        wx.showShareMenu({ withShareTicket: true });
+      }
+    } catch (e) {
+      // ignore in environments without wx
+    }
   },
-
   // Default token fetch: anonymous mode by default.
   // WeChat login is only used for gated pages that require persisted user identity.
   getSessionToken(options = {}) {

@@ -286,5 +286,12 @@ Page({
 
   goToVocabulary() {
     wx.switchTab({ url: '/pages/vocabulary/vocabulary' });
+  },
+
+  onShareAppMessage() {
+    return {
+      title: 'VibeTeacher 英语写作助手',
+      path: '/pages/index/index'
+    };
   }
 });
