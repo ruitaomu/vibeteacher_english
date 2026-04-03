@@ -5,6 +5,7 @@ Page({
   data: {
     stats: {},
     loading: false,
+    loginLoading: false,
     error: '',
     requiresLogin: false,
     historyLoading: false,
@@ -45,6 +46,8 @@ Page({
   },
 
   async handleLoginTap() {
+    this.setData({ loginLoading: true });
+    wx.showLoading({ title: '登录中...' });
     try {
       await app.loginWithWechat();
       this.setData({ error: '', requiresLogin: false });
@@ -52,6 +55,9 @@ Page({
       this.loadRevisionHistory(0);
     } catch (err) {
       this.setData({ error: err.message || '登录失败，请稍后重试。' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ loginLoading: false });
     }
   },
 

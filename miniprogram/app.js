@@ -7,7 +7,7 @@ App({
     tokenExpiresAt: 0,
     authMode: 'anonymous',
     // DevTools guard: keep anonymous flow stable even when WeChat IDE login is expired.
-    devtoolsWechatLoginEnabled: false
+    devtoolsWechatLoginEnabled: true
   },
 
   onLaunch() {

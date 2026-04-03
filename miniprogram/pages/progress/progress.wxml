@@ -8,7 +8,7 @@
   <view wx:if="{{requiresLogin}}" class="card login-card">
     <view class="section-title">需要微信登录</view>
     <view class="muted">学习进度属于登录后保存的数据。开发联调时如果微信开发者工具未登录，也不会自动拉起登录。</view>
-    <button class="btn-primary login-button" bindtap="handleLoginTap">去登录</button>
+    <button class="btn-primary login-button" bindtap="handleLoginTap" disabled="{{loginLoading}}">{{loginLoading ? '登录中...' : '去登录'}}</button>
     <view wx:if="{{error}}" class="error-text">{{error}}</view>
   </view>
 

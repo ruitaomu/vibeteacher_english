@@ -8,7 +8,7 @@
   <view wx:if="{{requiresLogin}}" class="card login-card">
     <text class="section-title">需要微信登录</text>
     <text class="muted">成就数据会绑定到微信身份。开发联调时请在需要时手动点击登录。</text>
-    <button class="btn-primary login-button" bindtap="handleLoginTap">去登录</button>
+    <button class="btn-primary login-button" bindtap="handleLoginTap" disabled="{{loginLoading}}">{{loginLoading ? '登录中...' : '去登录'}}</button>
     <text wx:if="{{error}}" class="error-text">{{error}}</text>
   </view>
 

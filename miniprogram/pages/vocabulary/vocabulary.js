@@ -4,6 +4,7 @@ const app = getApp();
 Page({
   data: {
     loading: true,
+    loginLoading: false,
     vocabulary: [],
     displayList: [],
     error: '',
@@ -37,12 +38,17 @@ Page({
   },
 
   async handleLoginTap() {
+    this.setData({ loginLoading: true });
+    wx.showLoading({ title: '登录中...' });
     try {
       await app.loginWithWechat();
       this.setData({ error: '', requiresLogin: false });
       this.loadVocabulary();
     } catch (err) {
       this.setData({ error: err.message || '登录失败，请稍后重试。' });
+    } finally {
+      wx.hideLoading();
+      this.setData({ loginLoading: false });
     }
   },
 

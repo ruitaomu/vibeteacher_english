@@ -8,7 +8,7 @@
   <view wx:if="{{requiresLogin}}" class="card login-card">
     <text class="section-title">需要微信登录</text>
     <text class="muted">词汇本属于登录后保存的数据。你可以先匿名使用首页改写，需要时再手动登录。</text>
-    <button class="btn-primary login-button" bindtap="handleLoginTap">去登录</button>
+    <button class="btn-primary login-button" bindtap="handleLoginTap" disabled="{{loginLoading}}">{{loginLoading ? '登录中...' : '去登录'}}</button>
     <text wx:if="{{error}}" class="error-text">{{error}}</text>
   </view>
 
