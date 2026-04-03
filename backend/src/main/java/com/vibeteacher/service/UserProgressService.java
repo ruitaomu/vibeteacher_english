@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.vibeteacher.api.dto.RevisionResponse;
 import com.vibeteacher.api.dto.VocabularyItem;
 import com.vibeteacher.model.Achievement;
 import com.vibeteacher.model.UserProgress;
@@ -33,7 +34,9 @@ public class UserProgressService {
         new Achievement("STREAK_15", "连签15天", "连续15天提交写作", "🔥"),
         new Achievement("STREAK_30", "连签30天", "连续30天提交写作", "🔥"),
         new Achievement("FIRST_SUGGESTED_VOCAB_USED", "学以致用", "首次使用建议过的词汇", "📘"),
-        new Achievement("SUGGESTED_VOCAB_USED_10", "词汇实践者", "累计使用10次建议过的词汇", "📗")
+        new Achievement("SUGGESTED_VOCAB_USED_10", "词汇达人", "累计使用10次建议过的词汇", "📗"),
+        new Achievement("VOCABULARY_CORRECT_5", "词汇实践者", "累计5次正确使用词汇表生词", "⭐"),
+        new Achievement("VOCABULARY_CORRECT_20", "词汇大师", "累计20次正确使用词汇表生词", "👑")
     );
 
     private final UserProgressRepository userProgressRepository;
@@ -121,6 +124,34 @@ public class UserProgressService {
         return checkAndGrantAchievements(userId, progress);
     }
 
+    @Transactional
+    public List<Achievement> recordVocabularyUsageFromAI(String userId, List<RevisionResponse.VocabularyUsage> vocabularyUsage) {
+        if (userId == null || vocabularyUsage == null || vocabularyUsage.isEmpty()) {
+            return List.of();
+        }
+
+        // 统计正确使用的词汇数量
+        int correctUsageCount = 0;
+        for (RevisionResponse.VocabularyUsage usage : vocabularyUsage) {
+            if (usage != null && "correct".equalsIgnoreCase(usage.getEvaluation())) {
+                correctUsageCount++;
+            }
+        }
+
+        if (correctUsageCount <= 0) {
+            return List.of();
+        }
+
+        // 更新用户进度中的正确使用次数
+        UserProgressEntity progress = getOrCreateProgressEntity(userId);
+        // 使用 suggestedVocabularyUsageCount 字段来存储正确使用次数（复用字段）
+        progress.setSuggestedVocabularyUsageCount(progress.getSuggestedVocabularyUsageCount() + correctUsageCount);
+        userProgressRepository.save(progress);
+
+        // 检查并授予成就
+        return checkAndGrantAchievements(userId, progress);
+    }
+
     public int countSuggestedVocabularyMatches(String userId, String text) {
         if (text == null || text.isBlank()) {
             return 0;
@@ -185,6 +216,8 @@ public class UserProgressService {
         if (streak >= 30) grantIfNew(userId, earnedIds, "STREAK_30", newlyEarned);
         if (suggestedVocabUsage >= 1) grantIfNew(userId, earnedIds, "FIRST_SUGGESTED_VOCAB_USED", newlyEarned);
         if (suggestedVocabUsage >= 10) grantIfNew(userId, earnedIds, "SUGGESTED_VOCAB_USED_10", newlyEarned);
+        if (suggestedVocabUsage >= 5) grantIfNew(userId, earnedIds, "VOCABULARY_CORRECT_5", newlyEarned);
+        if (suggestedVocabUsage >= 20) grantIfNew(userId, earnedIds, "VOCABULARY_CORRECT_20", newlyEarned);
 
         return newlyEarned;
     }

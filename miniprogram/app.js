@@ -2,6 +2,7 @@
 App({
   globalData: {
     userId: '',
+    // serverBase: 本地开发环境使用 127.0.0.1
     serverBase: 'https://vibeteacher.azurewebsites.net',
     sessionToken: '',
     tokenExpiresAt: 0,

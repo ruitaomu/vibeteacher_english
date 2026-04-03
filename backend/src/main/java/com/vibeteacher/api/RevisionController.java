@@ -81,12 +81,19 @@ public class RevisionController {
 
         RevisionResponse response;
         try {
+            // 查询用户词汇本
+            List<com.vibeteacher.api.dto.VocabularyItem> userVocabulary = null;
+            if (userId != null) {
+                userVocabulary = userProgressService.getVocabulary(userId);
+            }
+            
             response = openAIService.revise(
                 request.getModel(),
                 level,
                 request.getText(),
                 request.getRequirements(),
-                request.isExpand()
+                request.isExpand(),
+                userVocabulary
             );
         } catch (IllegalStateException ex) {
             logger.warn("Revise failed due to service state. model={}, level={}", request.getModel(), level, ex);
@@ -104,8 +111,11 @@ public class RevisionController {
             if (response.getVocabularySuggestions() != null && !response.getVocabularySuggestions().isEmpty()) {
                 userProgressService.addVocabulary(userId, response.getVocabularySuggestions());
             }
+            
+            // 处理词汇表使用情况，添加成就
+            List<Achievement> vocabUsageAchievements = userProgressService.recordVocabularyUsageFromAI(userId, response.getVocabularyUsage());
             revisionPersistenceService.saveRevisionWithIssues(userId, request, response, level);
-            response.setNewAchievements(mergeAchievements(newAchievements, usageAchievements));
+            response.setNewAchievements(mergeAchievements(mergeAchievements(newAchievements, usageAchievements), vocabUsageAchievements));
         }
         return ResponseEntity.ok(response);
     }

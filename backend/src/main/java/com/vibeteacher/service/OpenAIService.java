@@ -2,6 +2,7 @@ package com.vibeteacher.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class OpenAIService {
         this.promptDebug = promptDebug;
     }
 
-    public RevisionResponse revise(String model, String level, String text, String requirements, boolean expand) {
+    public RevisionResponse revise(String model, String level, String text, String requirements, boolean expand, List<VocabularyItem> userVocabulary) {
         String apiKey = keyVaultService.getApiKey();
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException("未配置 Key Vault API KEY");
@@ -46,8 +47,9 @@ public class OpenAIService {
                 .apiKey(apiKey)
                 .baseUrl(endpoint)
                 .build();
- 
+
         String levelGuidance = buildLevelGuidance(level);
+        String vocabularyGuidance = buildVocabularyGuidance(userVocabulary);
         String systemPrompt = "你是英语写作学习助手。你的任务是根据指定学习级别（中学7-12年级、大学英语四级、大学英语六级、TOFEL写作、GRE写作）对英文短文进行修改建议。\n" +
                 "整体要求：\n" +
                 "1. 不要改变原文意思。\n" +
@@ -56,9 +58,10 @@ public class OpenAIService {
                 "4. 修改意见必须使用中文。\n" +
                 "5. 无论在任何情况下，均不得输出除 JSON 对象以外的内容，且JSON对象的长度都不能超过10000字节。\n" +
                 "6. 无论在任何情况下，修改后的文章都必须使用英文，且不能超过1500字。\n" +
-                "7. 输出 JSON 对象，字段为: correctedText, summary, issues, vocabularySuggestions。\n" +
+                "7. 输出 JSON 对象，字段为: correctedText, summary, issues, vocabularySuggestions, vocabularyUsage。\n" +
                 "8. issues 是数组，每项包含 type, original, suggested, reason。\n" +
-                "9. vocabularySuggestions 是数组，从原文中挑选3-5个值得学习或改进的词汇，每项包含 word（英文单词或短语）, translation（中文翻译）, exampleSentence（英文示例句）。";
+                "9. vocabularySuggestions 是数组，从原文中挑选3-5个值得学习或改进的词汇，每项包含 word（英文单词或短语）, translation（中文翻译）, exampleSentence（英文示例句）。\n" +
+                "10. vocabularyUsage 是数组，检查原文中是否使用了用户词汇表中的词汇。如果使用了，请将这些词加入数组，每项包含 word（使用的词汇）, context（在原文中的使用上下文，不超过20个词）, evaluation（使用评价：'correct'表示使用正确且恰当，'incorrect'表示使用有误）。仅收录原文中确实使用的词汇表单词，不要添加未出现的词。";
 
         String requirementsLine = (requirements == null || requirements.isBlank())
             ? ""
@@ -69,6 +72,7 @@ public class OpenAIService {
 
         String userPrompt = "学习级别: " + level + "\n" +
         (levelGuidance.isBlank() ? "" : ("该学习级别强调的写作要求：\n" + levelGuidance + "\n")) +
+        (vocabularyGuidance.isBlank() ? "" : (vocabularyGuidance + "\n")) +
             requirementsLine +
             expandLine +
             "原文: \n" + text + "\n\n" +
@@ -152,6 +156,21 @@ public class OpenAIService {
                 }
                 revisionResponse.setVocabularySuggestions(vocab);
             }
+
+            JsonNode vocabUsageNode = node.get("vocabularyUsage");
+            if (vocabUsageNode != null && vocabUsageNode.isArray()) {
+                List<RevisionResponse.VocabularyUsage> vocabUsage = new ArrayList<>();
+                for (JsonNode usageNode : vocabUsageNode) {
+                    RevisionResponse.VocabularyUsage usage = new RevisionResponse.VocabularyUsage();
+                    if (usageNode.has("word")) usage.setWord(usageNode.get("word").asText());
+                    if (usageNode.has("context")) usage.setContext(usageNode.get("context").asText());
+                    if (usageNode.has("evaluation")) usage.setEvaluation(usageNode.get("evaluation").asText());
+                    if (usage.getWord() != null && !usage.getWord().isBlank()) {
+                        vocabUsage.add(usage);
+                    }
+                }
+                revisionResponse.setVocabularyUsage(vocabUsage);
+            }
         } catch (Exception ignored) {
         }
 
@@ -217,5 +236,27 @@ public class OpenAIService {
                 "语言与思维水平：研究生水平；强调思辨能力、逻辑严密性、学术语言风格。";
             default -> "";
         };
+    }
+
+    private String buildVocabularyGuidance(List<VocabularyItem> userVocabulary) {
+        if (userVocabulary == null || userVocabulary.isEmpty()) {
+            return "";
         }
+        
+        String vocabList = userVocabulary.stream()
+            .filter(v -> v != null && v.getWord() != null && !v.getWord().isBlank())
+            .map(v -> {
+                String meaning = v.getTranslation() != null && !v.getTranslation().isBlank() 
+                    ? "（" + v.getTranslation() + "）" 
+                    : "";
+                return "- " + v.getWord() + meaning;
+            })
+            .collect(Collectors.joining("\n"));
+        
+        if (vocabList.isBlank()) {
+            return "";
+        }
+        
+        return "用户词汇表（检查原文是否使用了这些词汇，如果使用到了请在 vocabularyUsage 中列出并评价）：\n" + vocabList;
+    }
 }

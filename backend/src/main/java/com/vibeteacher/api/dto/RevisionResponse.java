@@ -9,6 +9,7 @@ public class RevisionResponse {
     private String summary;
     private List<Issue> issues;
     private List<VocabularyItem> vocabularySuggestions;
+    private List<VocabularyUsage> vocabularyUsage;
     private List<Achievement> newAchievements;
     private String rawOutput;
 
@@ -44,6 +45,14 @@ public class RevisionResponse {
         this.vocabularySuggestions = vocabularySuggestions;
     }
 
+    public List<VocabularyUsage> getVocabularyUsage() {
+        return vocabularyUsage;
+    }
+
+    public void setVocabularyUsage(List<VocabularyUsage> vocabularyUsage) {
+        this.vocabularyUsage = vocabularyUsage;
+    }
+
     public List<Achievement> getNewAchievements() {
         return newAchievements;
     }
@@ -58,6 +67,36 @@ public class RevisionResponse {
 
     public void setRawOutput(String rawOutput) {
         this.rawOutput = rawOutput;
+    }
+
+    public static class VocabularyUsage {
+        private String word;
+        private String context;
+        private String evaluation;
+
+        public String getWord() {
+            return word;
+        }
+
+        public void setWord(String word) {
+            this.word = word;
+        }
+
+        public String getContext() {
+            return context;
+        }
+
+        public void setContext(String context) {
+            this.context = context;
+        }
+
+        public String getEvaluation() {
+            return evaluation;
+        }
+
+        public void setEvaluation(String evaluation) {
+            this.evaluation = evaluation;
+        }
     }
 
     public static class Issue {
