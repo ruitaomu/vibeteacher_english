@@ -19,3 +19,8 @@ spring:
 
 keyvault:
   url: ''
+
+wechat:
+  auth:
+    local-mock-login: true
+    local-mock-user-id: wx_local_dev

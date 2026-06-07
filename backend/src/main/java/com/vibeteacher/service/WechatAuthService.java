@@ -7,10 +7,12 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -26,11 +28,17 @@ public class WechatAuthService {
     private final KeyVaultService keyVaultService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final boolean localMockLoginEnabled;
+    private final String localMockUserId;
 
-    public WechatAuthService(KeyVaultService keyVaultService) {
+    public WechatAuthService(KeyVaultService keyVaultService,
+                             @Value("${wechat.auth.local-mock-login:false}") boolean localMockLoginEnabled,
+                             @Value("${wechat.auth.local-mock-user-id:wx_local_dev}") String localMockUserId) {
         this.keyVaultService = keyVaultService;
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
+        this.localMockLoginEnabled = localMockLoginEnabled;
+        this.localMockUserId = localMockUserId == null ? "wx_local_dev" : localMockUserId.trim();
     }
 
     public String authenticateAndResolveUserId(String code) {
@@ -41,6 +49,9 @@ public class WechatAuthService {
         String appId = keyVaultService.getWechatAppId();
         String appSecret = keyVaultService.getWechatAppSecret();
         if (appId == null || appId.isBlank() || appSecret == null || appSecret.isBlank()) {
+            if (localMockLoginEnabled) {
+                return localMockUserId.isBlank() ? "wx_local_dev" : localMockUserId;
+            }
             throw new WechatAuthException(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "未配置微信小程序凭据（WECHAT_APP_ID / WECHAT_APP_SECRET）"
@@ -111,7 +122,7 @@ public class WechatAuthService {
         }
         try {
             return objectMapper.readValue(rawBody, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception ex) {
+        } catch (JsonProcessingException ex) {
             throw new WechatAuthException(
                 HttpStatus.BAD_GATEWAY,
                 "微信登录失败：微信接口返回了非 JSON 响应。body=" + rawBody
