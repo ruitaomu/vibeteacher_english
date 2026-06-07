@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "学习进度"
+  "navigationBarTitleText": "学习进度",
+  "usingComponents": {
+    "loading-overlay": "../../components/loading-overlay/index"
+  }
 }

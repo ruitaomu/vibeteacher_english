@@ -1,4 +1,8 @@
 /* pages/progress/progress.wxss */
+ .page-root {
+  height: 100vh;
+ }
+
 .page-scroll {
   height: 100vh;
 }

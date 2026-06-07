@@ -5,6 +5,8 @@ Page({
   data: {
     loading: true,
     loginLoading: false,
+    busy: false,
+    busyText: '',
     achievements: [],
     stats: null,
     error: '',
@@ -23,7 +25,10 @@ Page({
     const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
     if (isLoggedIn) {
       this.setData({ requiresLogin: false });
-      this.loadData();
+      this._showBusy('加载中...');
+      this.loadData().finally(() => {
+        this._hideBusy();
+      });
       return;
     }
 
@@ -38,24 +43,38 @@ Page({
 
   async handleLoginTap() {
     this.setData({ loginLoading: true });
-    wx.showLoading({ title: '登录中...' });
+    this._showBusy('登录中...');
     try {
       await app.loginWithWechat();
       this.setData({ error: '', requiresLogin: false });
-      this.loadData();
+      await this.loadData();
     } catch (err) {
       this.setData({ error: err.message || '登录失败，请稍后重试。' });
     } finally {
-      wx.hideLoading();
       this.setData({ loginLoading: false });
+      this._hideBusy();
     }
+  },
+
+  _showBusy(text) {
+    this.setData({
+      busy: true,
+      busyText: text || '请稍候...'
+    });
+  },
+
+  _hideBusy() {
+    this.setData({
+      busy: false,
+      busyText: ''
+    });
   },
 
   loadData() {
     const userId = app.globalData.userId;
     this.setData({ loading: true, error: '' });
 
-    Promise.all([
+    return Promise.all([
       this._fetchAchievements(userId),
       this._fetchStats(userId)
     ]).then(([achievements, stats]) => {

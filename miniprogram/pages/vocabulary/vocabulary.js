@@ -5,6 +5,8 @@ Page({
   data: {
     loading: true,
     loginLoading: false,
+    busy: false,
+    busyText: '',
     vocabulary: [],
     displayList: [],
     error: '',
@@ -24,7 +26,10 @@ Page({
     const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
     if (isLoggedIn) {
       this.setData({ requiresLogin: false });
-      this.loadVocabulary();
+      this._showBusy('加载中...');
+      this.loadVocabulary().finally(() => {
+        this._hideBusy();
+      });
       return;
     }
 
@@ -39,36 +44,54 @@ Page({
 
   async handleLoginTap() {
     this.setData({ loginLoading: true });
-    wx.showLoading({ title: '登录中...' });
+    this._showBusy('登录中...');
     try {
       await app.loginWithWechat();
       this.setData({ error: '', requiresLogin: false });
-      this.loadVocabulary();
+      await this.loadVocabulary();
     } catch (err) {
       this.setData({ error: err.message || '登录失败，请稍后重试。' });
     } finally {
-      wx.hideLoading();
       this.setData({ loginLoading: false });
+      this._hideBusy();
     }
+  },
+
+  _showBusy(text) {
+    this.setData({
+      busy: true,
+      busyText: text || '请稍候...'
+    });
+  },
+
+  _hideBusy() {
+    this.setData({
+      busy: false,
+      busyText: ''
+    });
   },
 
   loadVocabulary() {
     const userId = app.globalData.userId;
     this.setData({ loading: true, error: '' });
 
-    wx.request({
-      url: `${app.globalData.serverBase}/api/user/vocabulary/library?userId=${encodeURIComponent(userId)}`,
-      method: 'GET',
-      success: (res) => {
-        if (res.statusCode === 200 && Array.isArray(res.data)) {
-          this.setData({ vocabulary: res.data, displayList: res.data, loading: false });
-        } else {
-          this.setData({ vocabulary: [], displayList: [], loading: false });
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${app.globalData.serverBase}/api/user/vocabulary/library?userId=${encodeURIComponent(userId)}`,
+        method: 'GET',
+        success: (res) => {
+          if (res.statusCode === 200 && Array.isArray(res.data)) {
+            this.setData({ vocabulary: res.data, displayList: res.data, loading: false });
+          } else {
+            this.setData({ vocabulary: [], displayList: [], loading: false });
+          }
+          resolve(res.data);
+        },
+        fail: (err) => {
+          this.setData({ error: err.errMsg || '网络错误', loading: false });
+          reject(err);
         }
-      },
-      fail: (err) => {
-        this.setData({ error: err.errMsg || '网络错误', loading: false });
-      }
+      });
     });
   },
 

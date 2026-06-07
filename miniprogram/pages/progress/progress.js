@@ -6,6 +6,8 @@ Page({
     stats: {},
     loading: false,
     loginLoading: false,
+    busy: false,
+    busyText: '',
     error: '',
     requiresLogin: false,
     historyLoading: false,
@@ -25,8 +27,13 @@ Page({
     const isLoggedIn = app.globalData.authMode === 'wechat' && !!app.globalData.userId;
     if (isLoggedIn) {
       this.setData({ requiresLogin: false });
-      this.loadStats();
-      this.loadRevisionHistory(0);
+      this._showBusy('加载中...');
+      Promise.all([
+        this.loadStats(),
+        this.loadRevisionHistory(0)
+      ]).finally(() => {
+        this._hideBusy();
+      });
       return;
     }
 
@@ -47,18 +54,34 @@ Page({
 
   async handleLoginTap() {
     this.setData({ loginLoading: true });
-    wx.showLoading({ title: '登录中...' });
+    this._showBusy('登录中...');
     try {
       await app.loginWithWechat();
       this.setData({ error: '', requiresLogin: false });
-      this.loadStats();
-      this.loadRevisionHistory(0);
+      await Promise.all([
+        this.loadStats(),
+        this.loadRevisionHistory(0)
+      ]);
     } catch (err) {
       this.setData({ error: err.message || '登录失败，请稍后重试。' });
     } finally {
-      wx.hideLoading();
       this.setData({ loginLoading: false });
+      this._hideBusy();
     }
+  },
+
+  _showBusy(text) {
+    this.setData({
+      busy: true,
+      busyText: text || '请稍候...'
+    });
+  },
+
+  _hideBusy() {
+    this.setData({
+      busy: false,
+      busyText: ''
+    });
   },
 
   async loadStats() {

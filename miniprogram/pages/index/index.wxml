@@ -126,4 +126,6 @@
       <button class="btn-link" bindtap="goToAchievements">查看全部成就 →</button>
     </view>
   </block>
+
+  <loading-overlay visible="{{busy}}" text="{{busyText}}" />
 </view>

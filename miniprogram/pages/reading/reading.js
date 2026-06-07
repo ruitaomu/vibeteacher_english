@@ -4,6 +4,8 @@ Page({
   data: {
     loading: false,
     ocrLoading: false,
+    busy: false,
+    busyText: '',
     error: '',
     result: null,
     ocrImageName: '',
@@ -54,6 +56,7 @@ Page({
           ocrImageName: this._extractFileName(filePath),
           ocrLoading: true
         });
+        this._showBusy('图片识别中...');
 
         try {
           const recognizedText = await this._uploadImageForOcr(filePath, file);
@@ -69,6 +72,7 @@ Page({
           this.setData({ error: err.message || '图片识别失败，请稍后重试。' });
         } finally {
           this.setData({ ocrLoading: false });
+          this._hideBusy();
         }
       },
       fail: (err) => {
@@ -161,6 +165,7 @@ Page({
     }
 
     this.setData({ loading: true });
+    this._showBusy('正在分析阅读内容...');
 
     try {
       if (!app.isTokenValid()) {
@@ -175,6 +180,7 @@ Page({
       this.setData({ error: err.message || '请求失败，请重试。' });
     } finally {
       this.setData({ loading: false });
+      this._hideBusy();
     }
   },
 
@@ -260,6 +266,7 @@ Page({
       [`result.sentences[${sentenceIndex}].structureLoading`]: true,
       [`result.sentences[${sentenceIndex}].structureError`]: ''
     });
+    this._showBusy('句子结构讲解中...');
 
     this._requestSentenceStructure(sentence.original)
       .then((response) => {
@@ -275,6 +282,9 @@ Page({
           [`result.sentences[${sentenceIndex}].structureLoading`]: false,
           [`result.sentences[${sentenceIndex}].structureError`]: err.message || '句子结构讲解失败，请稍后重试。'
         });
+      })
+      .finally(() => {
+        this._hideBusy();
       });
   },
 
@@ -354,11 +364,25 @@ Page({
       return Promise.resolve();
     }
 
-    wx.showLoading({ title: '登录中...' });
+    this._showBusy('登录中...');
     return app.loginWithWechat()
       .finally(() => {
-        wx.hideLoading();
+        this._hideBusy();
       });
+  },
+
+  _showBusy(text) {
+    this.setData({
+      busy: true,
+      busyText: text || '请稍候...'
+    });
+  },
+
+  _hideBusy() {
+    this.setData({
+      busy: false,
+      busyText: ''
+    });
   },
 
   _addVocabularyItem(item) {

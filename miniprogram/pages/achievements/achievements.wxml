@@ -61,4 +61,6 @@
   </view>
 
   </block>
+
+  <loading-overlay visible="{{busy}}" text="{{busyText}}" />
 </view>

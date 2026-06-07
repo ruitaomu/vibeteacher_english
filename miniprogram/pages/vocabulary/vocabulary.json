@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "词汇本",
-  "usingComponents": {}
+  "usingComponents": {
+    "loading-overlay": "../../components/loading-overlay/index"
+  }
 }

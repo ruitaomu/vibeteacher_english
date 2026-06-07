@@ -1,0 +1,6 @@
+<view wx:if="{{visible}}" class="loading-overlay">
+  <view class="loading-panel">
+    <text class="loading-icon">⏳</text>
+    <text class="loading-text">{{text}}</text>
+  </view>
+</view>

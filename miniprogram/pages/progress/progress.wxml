@@ -1,4 +1,5 @@
 <!-- pages/progress/progress.wxml — 学习进度页面 -->
+<view class="page-root">
 <scroll-view scroll-y class="page-scroll">
   <view class="page-hero card">
     <view class="hero-title">学习进度</view>
@@ -105,3 +106,6 @@
 
   <view style="height: 40rpx;"></view>
 </scroll-view>
+
+<loading-overlay visible="{{busy}}" text="{{busyText}}" />
+</view>

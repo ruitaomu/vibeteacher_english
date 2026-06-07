@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "写作练习",
-  "usingComponents": {}
+  "usingComponents": {
+    "loading-overlay": "../../components/loading-overlay/index"
+  }
 }

@@ -150,4 +150,6 @@
       <text wx:else class="muted">未返回逐句翻译结果。</text>
     </view>
   </block>
+
+  <loading-overlay visible="{{busy}}" text="{{busyText}}" />
 </view>
