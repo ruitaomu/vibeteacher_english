@@ -1,0 +1,153 @@
+<view class="container">
+  <view class="page-header">
+    <text class="page-title">阅读助手</text>
+    <text class="page-subtitle">输入英文内容，获取整体翻译、逐句翻译和重点学习点。</text>
+  </view>
+
+  <view class="card">
+    <view class="form-group">
+      <text class="form-label">模型</text>
+      <picker mode="selector" range="{{models}}" value="{{modelIndex}}" bindchange="onModelChange">
+        <view class="picker-value">{{form.model}} ▾</view>
+      </picker>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">阅读内容</text>
+      <view class="ocr-toolbar">
+        <button class="btn-secondary ocr-button" plain="true" disabled="{{loading || ocrLoading}}" bindtap="chooseImageForOcr">
+          {{ocrLoading ? '识别中...' : '拍照/图片识别'}}
+        </button>
+        <text class="ocr-hint">支持拍照或从相册导入，识别结果会自动填入文本框。</text>
+      </view>
+      <view wx:if="{{ocrImageName}}" class="ocr-status">
+        <text class="muted">已选择图片：{{ocrImageName}}</text>
+      </view>
+      <textarea
+        class="textarea"
+        placeholder="请输入需要分析的英文内容..."
+        value="{{form.text}}"
+        bindinput="onTextInput"
+        auto-height
+        maxlength="3000"
+      />
+    </view>
+
+    <button class="btn-primary" disabled="{{loading}}" bindtap="submit">
+      {{loading ? '分析中...' : '阅读分析'}}
+    </button>
+
+    <text wx:if="{{error}}" class="error-text">{{error}}</text>
+  </view>
+
+  <block wx:if="{{result}}">
+    <view class="card">
+      <text class="section-title">整体翻译</text>
+      <text class="result-text">{{result.overallTranslation || '未返回整体翻译'}}</text>
+    </view>
+
+    <view class="card">
+      <text class="section-title">逐句翻译</text>
+      <block wx:if="{{result.sentences && result.sentences.length > 0}}">
+        <view wx:for="{{result.sentences}}" wx:for-item="sentence" wx:for-index="sentenceIndex" wx:key="sentenceIndex" class="sentence-card">
+          <view class="sentence-head">
+            <text class="pill">句子 {{sentenceIndex + 1}}</text>
+          </view>
+          <view class="sentence-block">
+            <text class="sentence-label">原句</text>
+            <text class="result-text">{{sentence.original}}</text>
+          </view>
+          <view class="sentence-block">
+            <text class="sentence-label">翻译</text>
+            <text class="result-text">{{sentence.translation}}</text>
+          </view>
+
+          <view class="action-row">
+            <button
+              class="btn-secondary mini-action"
+              size="mini"
+              data-sentence-index="{{sentenceIndex}}"
+              bindtap="handleStructureExplain"
+              disabled="{{sentence.structureLoading}}"
+            >
+              {{sentence.structureLoading ? '讲解中...' : '句子结构讲解'}}
+            </button>
+          </view>
+
+          <text wx:if="{{sentence.structureError}}" class="error-text">{{sentence.structureError}}</text>
+          <view wx:if="{{sentence.structureExplanation}}" class="structure-box">
+            <text class="sentence-label">句子结构讲解</text>
+            <text class="result-text">{{sentence.structureExplanation}}</text>
+          </view>
+
+          <view wx:if="{{sentence.keyWords && sentence.keyWords.length > 0}}" class="learn-section">
+            <text class="learn-title">重点单词</text>
+            <view wx:for="{{sentence.keyWords}}" wx:for-item="point" wx:for-index="pointIndex" wx:key="pointIndex" class="learn-item">
+              <view class="learn-main">
+                <text class="learn-term">{{point.term}}</text>
+                <text class="learn-explanation">{{point.explanation}}</text>
+                <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
+              </view>
+              <button
+                class="btn-secondary mini-action add-button"
+                size="mini"
+                data-sentence-index="{{sentenceIndex}}"
+                data-item-index="{{pointIndex}}"
+                data-category="keyWords"
+                bindtap="handleAddLearningPoint"
+                disabled="{{point.saving || point.saved}}"
+              >
+                {{point.saved ? '已加入词汇本' : (point.saving ? '加入中...' : '加入词汇本')}}
+              </button>
+            </view>
+          </view>
+
+          <view wx:if="{{sentence.keyPhrases && sentence.keyPhrases.length > 0}}" class="learn-section">
+            <text class="learn-title">重点短语</text>
+            <view wx:for="{{sentence.keyPhrases}}" wx:for-item="point" wx:for-index="pointIndex" wx:key="pointIndex" class="learn-item">
+              <view class="learn-main">
+                <text class="learn-term">{{point.term}}</text>
+                <text class="learn-explanation">{{point.explanation}}</text>
+                <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
+              </view>
+              <button
+                class="btn-secondary mini-action add-button"
+                size="mini"
+                data-sentence-index="{{sentenceIndex}}"
+                data-item-index="{{pointIndex}}"
+                data-category="keyPhrases"
+                bindtap="handleAddLearningPoint"
+                disabled="{{point.saving || point.saved}}"
+              >
+                {{point.saved ? '已加入词汇本' : (point.saving ? '加入中...' : '加入词汇本')}}
+              </button>
+            </view>
+          </view>
+
+          <view wx:if="{{sentence.typicalPatterns && sentence.typicalPatterns.length > 0}}" class="learn-section">
+            <text class="learn-title">典型句式</text>
+            <view wx:for="{{sentence.typicalPatterns}}" wx:for-item="point" wx:for-index="pointIndex" wx:key="pointIndex" class="learn-item">
+              <view class="learn-main">
+                <text class="learn-term">{{point.term}}</text>
+                <text class="learn-explanation">{{point.explanation}}</text>
+                <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
+              </view>
+              <button
+                class="btn-secondary mini-action add-button"
+                size="mini"
+                data-sentence-index="{{sentenceIndex}}"
+                data-item-index="{{pointIndex}}"
+                data-category="typicalPatterns"
+                bindtap="handleAddLearningPoint"
+                disabled="{{point.saving || point.saved}}"
+              >
+                {{point.saved ? '已加入词汇本' : (point.saving ? '加入中...' : '加入词汇本')}}
+              </button>
+            </view>
+          </view>
+        </view>
+      </block>
+      <text wx:else class="muted">未返回逐句翻译结果。</text>
+    </view>
+  </block>
+</view>

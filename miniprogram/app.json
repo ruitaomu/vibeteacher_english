@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/reading/reading",
     "pages/progress/progress",
     "pages/achievements/achievements",
     "pages/vocabulary/vocabulary"
@@ -23,6 +24,12 @@
         "text": "写作练习",
         "iconPath": "assets/icons/write.png",
         "selectedIconPath": "assets/icons/write-active.png"
+      },
+      {
+        "pagePath": "pages/reading/reading",
+        "text": "阅读助手",
+        "iconPath": "assets/icons/read.png",
+        "selectedIconPath": "assets/icons/read-active.png"
       },
       {
         "pagePath": "pages/progress/progress",

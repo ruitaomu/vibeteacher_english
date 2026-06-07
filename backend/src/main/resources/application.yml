@@ -36,11 +36,11 @@ token:
 
 # 本地调试示例（可按需启用）
 keyvault:
-#   url: "https://<your-vault-name>.vault.azure.net/"
-#   secretName: "AZUREOPENAI-APIKEY"
-#   endpointSecretName: "AZUREOPENAI-ENDPOINT"
-#   ocrSecretName: "AZUREOCR-APIKEY"
-#   ocrEndpointSecretName: "AZUREOCR-ENDPOINT"
+  url: "https://vibeteacher-keyvault.vault.azure.net/"
+  secretName: "AZUREOPENAI-APIKEY"
+  endpointSecretName: "AZUREOPENAI-ENDPOINT"
+  ocrSecretName: "AZUREOCR-APIKEY"
+  ocrEndpointSecretName: "AZUREOCR-ENDPOINT"
   wechatAppIdSecretName: ${KEYVAULT_WECHAT_APP_ID_SECRET_NAME:WECHAT-APP-ID}
   wechatAppSecretSecretName: ${KEYVAULT_WECHAT_APP_SECRET_SECRET_NAME:WECHAT-APP-SECRET}
   mysqlDbSecretName: ${KEYVAULT_MYSQL_DB_SECRET_NAME:MYSQL-DB}
