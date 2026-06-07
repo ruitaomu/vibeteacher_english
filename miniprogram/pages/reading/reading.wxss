@@ -90,6 +90,16 @@
 
 .mini-action {
   margin: 0;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  padding: 16rpx 24rpx;
+}
+
+.mini-action[disabled] {
+  opacity: 0.6;
 }
 
 .structure-box {
@@ -138,4 +148,6 @@
 
 .add-button {
   width: 220rpx;
+  background: #2563eb;
+  color: #ffffff;
 }

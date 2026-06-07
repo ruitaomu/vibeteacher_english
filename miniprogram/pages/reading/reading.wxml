@@ -7,8 +7,8 @@
   <view class="card">
     <view class="form-group">
       <text class="form-label">模型</text>
-      <picker mode="selector" range="{{models}}" value="{{modelIndex}}" bindchange="onModelChange">
-        <view class="picker-value">{{form.model}} ▾</view>
+      <picker mode="selector" range="{{modelLabels}}" value="{{modelIndex}}" bindchange="onModelChange">
+        <view class="picker-value">{{modelLabels[modelIndex]}} ▾</view>
       </picker>
     </view>
 
@@ -64,7 +64,7 @@
 
           <view class="action-row">
             <button
-              class="btn-secondary mini-action"
+              class="btn-primary mini-action"
               size="mini"
               data-sentence-index="{{sentenceIndex}}"
               bindtap="handleStructureExplain"
@@ -89,7 +89,7 @@
                 <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
               </view>
               <button
-                class="btn-secondary mini-action add-button"
+                class="btn-primary mini-action add-button"
                 size="mini"
                 data-sentence-index="{{sentenceIndex}}"
                 data-item-index="{{pointIndex}}"
@@ -111,7 +111,7 @@
                 <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
               </view>
               <button
-                class="btn-secondary mini-action add-button"
+                class="btn-primary mini-action add-button"
                 size="mini"
                 data-sentence-index="{{sentenceIndex}}"
                 data-item-index="{{pointIndex}}"
@@ -133,7 +133,7 @@
                 <text wx:if="{{point.exampleSentence}}" class="muted learn-example">{{point.exampleSentence}}</text>
               </view>
               <button
-                class="btn-secondary mini-action add-button"
+                class="btn-primary mini-action add-button"
                 size="mini"
                 data-sentence-index="{{sentenceIndex}}"
                 data-item-index="{{pointIndex}}"

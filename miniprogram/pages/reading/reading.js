@@ -10,10 +10,11 @@ Page({
     result: null,
     ocrImageName: '',
     form: {
-      model: 'gpt-5.4',
+      model: 'gpt-5.4-mini',
       text: ''
     },
-    models: ['gpt-5.2', 'gpt-5.4'],
+    models: ['gpt-5.4-mini', 'gpt-5.4'],
+    modelLabels: ['快速', '专家'],
     modelIndex: 0
   },
 
