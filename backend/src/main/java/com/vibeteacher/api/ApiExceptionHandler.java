@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,9 +44,20 @@ public class ApiExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_GATEWAY, ex.getMessage(), request.getRequestURI());
     }
 
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException ex,
+                                            HttpServletRequest request) {
+        logger.warn("Client disconnected before response was fully written. path={}, reason={}",
+            request.getRequestURI(), ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception ex,
                                                                HttpServletRequest request) {
+        if (isClientAbort(ex)) {
+            logger.warn("Client connection aborted. path={}, reason={}", request.getRequestURI(), ex.getMessage());
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
         logger.error("Unhandled API exception. path={}", request.getRequestURI(), ex);
         String message = ex.getMessage() == null || ex.getMessage().isBlank()
             ? "服务端发生未处理异常，请稍后重试。"
@@ -63,5 +75,30 @@ public class ApiExceptionHandler {
         body.put("message", message);
         body.put("path", path);
         return ResponseEntity.status(status).body(body);
+    }
+
+    private boolean isClientAbort(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof AsyncRequestNotUsableException) {
+                return true;
+            }
+            String className = current.getClass().getName();
+            if ("org.apache.catalina.connector.ClientAbortException".equals(className)) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase();
+                if (lower.contains("broken pipe")
+                    || lower.contains("connection reset")
+                    || lower.contains("software caused connection abort")
+                    || message.contains("软件中止了一个已建立的连接")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

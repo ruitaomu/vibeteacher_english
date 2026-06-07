@@ -8,10 +8,10 @@ Page({
     result: null,
     ocrImageName: '',
     form: {
-      model: 'gpt-5.2',
+      model: 'gpt-5.4',
       text: ''
     },
-    models: ['gpt-5.2', 'gpt-5.3'],
+    models: ['gpt-5.2', 'gpt-5.4'],
     modelIndex: 0
   },
 
@@ -225,6 +225,7 @@ Page({
       wx.request({
         url: `${app.globalData.serverBase}/api/reading/analyze`,
         method: 'POST',
+        timeout: 120000,
         header: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${app.globalData.sessionToken}`
@@ -282,6 +283,7 @@ Page({
       wx.request({
         url: `${app.globalData.serverBase}/api/reading/structure`,
         method: 'POST',
+        timeout: 120000,
         header: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${app.globalData.sessionToken}`

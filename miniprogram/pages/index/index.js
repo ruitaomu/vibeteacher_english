@@ -10,7 +10,7 @@ Page({
     ocrImageName: '',
     form: {
       level: '中学12年级',
-      model: 'gpt-5.2',
+      model: 'gpt-5.4',
       text: '',
       requirements: '',
       expand: false
@@ -21,7 +21,7 @@ Page({
       '大学英语四级', '大学英语六级', 'TOEFL写作', 'GRE写作'
     ],
     levelIndex: 5,
-    models: ['gpt-5.2', 'gpt-5.3'],
+    models: ['gpt-5.2', 'gpt-5.4'],
     modelIndex: 0,
     newAchievements: []
   },

@@ -43,7 +43,7 @@ public class ReadingAssistantService {
             + "5. translation 是该句的中文翻译。\n"
             + "6. keyWords 只保留对中学生英语学习不常见、但值得重点掌握的单词；若没有则返回空数组。\n"
             + "7. keyPhrases 只保留该句中值得学习的习惯短语、固定搭配或表达；若没有则返回空数组。\n"
-            + "8. typicalPatterns 只保留该句中有教学价值的典型句式或结构；若没有则返回空数组。\n"
+            + "8. typicalPatterns 只保留该句中有教学价值的典型句式或结构，且这种典型句式或结构必须在中学英语教学中具有代表性（比如常见于教学示例中），在日常英语写作中有普遍应用，同时在英语考试中具有一定的应用价值；若没有则返回空数组。\n"
             + "9. keyWords、keyPhrases、typicalPatterns 的每个元素字段固定为 term, explanation, exampleSentence。\n"
             + "10. explanation 必须使用中文，说明要结合当前句子，不要空泛，不要捏造原文没有的知识点。\n"
             + "11. exampleSentence 优先使用原句中的相关片段；若不适合，可填写原句本身。\n"
@@ -54,6 +54,9 @@ public class ReadingAssistantService {
 
         ReadingAnalysisResponse response = new ReadingAnalysisResponse();
         response.setRawOutput(textOutput);
+        if (promptDebug) {
+            logger.info("analyze raw output:\n{}", textOutput);
+        }
 
         try {
             JsonNode root = objectMapper.readTree(textOutput);
@@ -81,6 +84,7 @@ public class ReadingAssistantService {
                 response.setSentences(sentences);
             }
         } catch (Exception ignored) {
+
         }
 
         return response;
@@ -99,6 +103,9 @@ public class ReadingAssistantService {
 
         SentenceStructureResponse response = new SentenceStructureResponse();
         response.setRawOutput(textOutput);
+        if (promptDebug) {
+            logger.info("explainSentenceStructure raw output:\n{}", textOutput);
+        }
         response.setOriginal(sentence);
 
         try {
