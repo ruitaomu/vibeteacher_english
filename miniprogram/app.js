@@ -1,17 +1,20 @@
 // app.js — Global application logic for VibeTeacher English WeChat Mini-Program
+const appConfig = require('./config');
+
 App({
   globalData: {
     userId: '',
-    // serverBase: 本地开发环境使用 127.0.0.1
-    serverBase: 'https://vibeteacher.azurewebsites.net',
+    serverBase: '',
     sessionToken: '',
     tokenExpiresAt: 0,
     authMode: 'anonymous',
     // DevTools guard: keep anonymous flow stable even when WeChat IDE login is expired.
-    devtoolsWechatLoginEnabled: true
+    devtoolsWechatLoginEnabled: false
   },
 
   onLaunch() {
+    this.globalData.serverBase = this.resolveServerBase();
+
     const token = wx.getStorageSync('sessionToken');
     const expiresAt = wx.getStorageSync('tokenExpiresAt') || 0;
     const authMode = wx.getStorageSync('authMode') || 'anonymous';
@@ -32,6 +35,23 @@ App({
     } catch (e) {
       // ignore in environments without wx
     }
+  },
+
+  resolveServerBase() {
+    try {
+      const accountInfo = wx.getAccountInfoSync ? wx.getAccountInfoSync() : null;
+      const envVersion = accountInfo && accountInfo.miniProgram
+        ? accountInfo.miniProgram.envVersion
+        : '';
+      const isDevTools = this._isDevToolsEnvironment();
+      if (isDevTools || envVersion === 'develop') {
+        return 'http://127.0.0.1:8080';
+      }
+    } catch (e) {
+      // fall through to production default
+    }
+
+    return String(appConfig && appConfig.serverBase ? appConfig.serverBase : '').trim();
   },
   // Default token fetch: anonymous mode by default.
   // WeChat login is only used for gated pages that require persisted user identity.
@@ -156,6 +176,16 @@ App({
       const platform = info && info.platform ? String(info.platform).toLowerCase() : '';
       const isDevtools = platform === 'devtools';
       return isDevtools && !this.globalData.devtoolsWechatLoginEnabled;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  _isDevToolsEnvironment() {
+    try {
+      const info = wx.getSystemInfoSync ? wx.getSystemInfoSync() : null;
+      const platform = info && info.platform ? String(info.platform).toLowerCase() : '';
+      return platform === 'devtools';
     } catch (e) {
       return false;
     }

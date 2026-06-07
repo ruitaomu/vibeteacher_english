@@ -13,13 +13,33 @@
 
 ## 本地运行
 1. 进入后端目录
-2. 使用 JDK 17+ 构建并运行
+2. 设置本地运行环境变量（不依赖 Azure Key Vault / MySQL）
+
+```bash
+set SPRING_PROFILES_ACTIVE=local
+set SESSION_TOKEN_SECRET=replace-with-a-long-random-string
+set OPENAI_API_KEY=your-openai-key
+set OPENAI_ENDPOINT=https://your-openai-endpoint.example.com/
+set AZURE_OCR_API_KEY=your-ocr-key
+set AZURE_OCR_ENDPOINT=https://your-ocr-endpoint.example.com/
+```
+
+3. 使用 JDK 17+ 构建并运行
 
 ```bash
 mvn spring-boot:run
 ```
 
 浏览器打开：http://localhost:8080
+
+4. 在微信开发者工具中导入 `miniprogram/`，前端会在开发环境自动连接 `http://127.0.0.1:8080`
+
+5. 如果你希望测试微信登录，再把 `miniprogram/app.js` 中的 `devtoolsWechatLoginEnabled` 改成 `true`，并在开发者工具里重新登录微信
+
+## 小程序配置
+- `miniprogram/config.js` 保存非开发环境使用的系统后端地址
+- `miniprogram/app.js` 只在确认是开发者工具或开发版时强制切换到 `http://127.0.0.1:8080`
+- 真机联调如果要连本地后端，请改用局域网 IP 或 HTTPS 隧道域名，不要使用本机回环地址
 
 ## 生产部署（Azure App Service）
 
