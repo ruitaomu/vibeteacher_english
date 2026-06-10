@@ -34,7 +34,6 @@ token:
 
 
 
-# 本地调试示例（可按需启用）
 keyvault:
   url: "https://vibeteacher-keyvault.vault.azure.net/"
   secretName: "AZUREOPENAI-APIKEY"
