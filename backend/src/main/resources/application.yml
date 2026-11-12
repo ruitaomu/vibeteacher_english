@@ -31,6 +31,17 @@ spring:
 token:
   secret: ${SESSION_TOKEN_SECRET:}
 
+# 阅读助手“推荐文章”的来源：开放许可（Creative Commons）站点 + RSS 源（逗号分隔，留空则不使用）
+reading:
+  articles:
+    simple-wikipedia-api: https://simple.wikipedia.org/w/api.php
+    wikinews-api: https://en.wikinews.org/w/api.php
+    plos-api: https://api.plos.org/search
+    rss-feeds: https://www.newsinlevels.com/feed/,https://breakingnewsenglish.com/bne.xml
+    # 随机读取 feed 的历史分页（WordPress 的 ?paged=N），不支持分页的 feed 会回退到第一页；1 表示只读第一页
+    rss-max-pages: 300
+    max-chars: 2000
+
 
 
 

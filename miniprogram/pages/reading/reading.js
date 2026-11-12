@@ -1,4 +1,5 @@
 const app = getApp();
+const MAX_SEEN_ARTICLES = 30;
 
 Page({
   data: {
@@ -15,7 +16,106 @@ Page({
     },
     models: ['gpt-5.4-mini', 'gpt-5.4'],
     modelLabels: ['快速', '专家'],
-    modelIndex: 0
+    modelIndex: 0,
+    levels: [
+      '中学7年级', '中学8年级', '中学9年级', '中学10年级',
+      '中学11年级', '中学12年级',
+      '大学英语四级', '大学英语六级', 'TOEFL写作', 'GRE写作'
+    ],
+    levelLabels: [
+      '中学7年级', '中学8年级', '中学9年级', '中学10年级',
+      '中学11年级', '中学12年级',
+      '大学英语四级', '大学英语六级', 'TOEFL', 'GRE'
+    ],
+    levelIndex: 5,
+    articleLoading: false,
+    article: null,
+    // 最近看过的文章链接，第一项为当前文章；换篇时交给后端排除
+    seenArticleUrls: []
+  },
+
+  onLevelChange(e) {
+    this.setData({ levelIndex: parseInt(e.detail.value, 10) });
+  },
+
+  async fetchArticle() {
+    if (this.data.articleLoading || this.data.loading) {
+      return;
+    }
+    this.setData({ error: '', articleLoading: true });
+    this._showBusy('正在获取文章...');
+
+    try {
+      if (!app.isTokenValid()) {
+        await app.getSessionToken();
+      }
+      const article = await this._requestArticle();
+      if (!article || !article.text) {
+        throw new Error('未获取到文章内容，请重试。');
+      }
+      if (this.data.article && article.url === this.data.article.url) {
+        throw new Error('暂未获取到不同的文章，请稍后重试或切换学习级别。');
+      }
+      this.setData({
+        article,
+        result: null,
+        'form.text': article.text,
+        seenArticleUrls: [article.url]
+          .concat(this.data.seenArticleUrls.filter((url) => url !== article.url))
+          .slice(0, MAX_SEEN_ARTICLES)
+      });
+    } catch (err) {
+      this.setData({ error: err.message || '获取文章失败，请稍后重试。' });
+    } finally {
+      this.setData({ articleLoading: false });
+      this._hideBusy();
+    }
+  },
+
+  _requestArticle(isRetry, parameters) {
+    const query = parameters || {
+      level: this.data.levels[this.data.levelIndex],
+      excludeUrls: this.data.article ? this.data.seenArticleUrls.slice() : []
+    };
+    // 手工拼接查询串，让每个链接成为独立的 excludeUrl 参数
+    const queryString = [`level=${encodeURIComponent(query.level)}`]
+      .concat(query.excludeUrls.map((url) => `excludeUrl=${encodeURIComponent(url)}`))
+      .join('&');
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: `${app.globalData.serverBase}/api/reading/article?${queryString}`,
+        method: 'GET',
+        timeout: 60000,
+        header: {
+          Authorization: `Bearer ${app.globalData.sessionToken}`
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            resolve(res.data);
+          } else if (res.statusCode === 401 && !isRetry) {
+            app.getSessionToken({ forceRefresh: true })
+              .then(() => this._requestArticle(true, query))
+              .then(resolve)
+              .catch(reject);
+          } else {
+            const message = this._extractApiErrorMessage(res) || `请求失败 (${res.statusCode})`;
+            reject(new Error(message));
+          }
+        },
+        fail: (err) => reject(new Error(err.errMsg || '网络错误'))
+      });
+    });
+  },
+
+  copyArticleLink() {
+    const article = this.data.article;
+    if (!article || !article.url) {
+      return;
+    }
+    wx.setClipboardData({
+      data: article.url,
+      success: () => wx.showToast({ title: '原文链接已复制', icon: 'none' })
+    });
   },
 
   onModelChange(e) {

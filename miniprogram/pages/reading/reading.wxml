@@ -13,6 +13,27 @@
     </view>
 
     <view class="form-group">
+      <text class="form-label">推荐文章</text>
+      <view class="article-toolbar">
+        <picker class="article-level" mode="selector" range="{{levelLabels}}" value="{{levelIndex}}" bindchange="onLevelChange">
+          <view class="picker-value">{{levelLabels[levelIndex]}} ▾</view>
+        </picker>
+        <button class="btn-secondary article-button" plain="true" disabled="{{loading || articleLoading}}" bindtap="fetchArticle">
+          {{articleLoading ? '获取中...' : (article ? '换一篇' : '获取文章')}}
+        </button>
+      </view>
+      <text class="ocr-hint">按所选级别从免费英文站点拉取一篇文章并填入下方文本框，难度为自动估算。</text>
+      <view wx:if="{{article}}" class="article-meta">
+        <text class="article-title">{{article.title}}{{article.excerpt ? '（节选）' : ''}}</text>
+        <text class="muted article-line">来源：{{article.source}}{{article.author ? ' · ' + article.author : ''}}</text>
+        <text class="muted article-line">许可：{{article.license}}</text>
+        <text class="muted article-line">估算难度：{{article.estimatedGrade}}（Flesch-Kincaid 年级指数）</text>
+        <text wx:if="{{!article.levelMatched}}" class="article-line article-warning">未找到与该级别完全匹配的文章，已选择难度最接近的一篇。</text>
+        <text class="article-link" bindtap="copyArticleLink">复制原文链接</text>
+      </view>
+    </view>
+
+    <view class="form-group">
       <text class="form-label">阅读内容</text>
       <view class="ocr-toolbar">
         <button class="btn-secondary ocr-button" plain="true" disabled="{{loading || ocrLoading}}" bindtap="chooseImageForOcr">
