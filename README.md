@@ -32,6 +32,11 @@
 - 独立于写作练习的新 Tab
 - 支持模型选择：`gpt-5.4-mini`、`gpt-5.4`
 - 支持文本输入、拍照识别、相册导入 OCR
+- 支持按学习级别（中学 7-12 年级、四级 / 六级、TOEFL、GRE）**获取推荐文章**并填入文本框：
+  - 来源：Simple English Wikipedia、Wikinews、PLOS 期刊摘要（均为 Creative Commons 许可），以及 `reading.articles.rss-feeds` 中配置的 RSS 源
+  - RSS 源只使用 feed 自身提供的标题、正文和链接，不抓取网页；启用前请确认该站点的使用条款
+  - 难度用 Flesch-Kincaid 年级指数自动估算，仅供参考
+  - 页面会展示标题、来源、许可和原文链接
 - 支持：
   - 全文整体翻译
   - 逐句翻译
@@ -87,6 +92,7 @@
 |---|---|---|
 | POST | `/api/reading/analyze` | 全文翻译 + 逐句翻译 + 学习点提取 |
 | POST | `/api/reading/structure` | 单句句子结构讲解 |
+| GET | `/api/reading/article?level=中学9年级` | 按学习级别拉取一篇推荐文章 |
 
 ### 用户数据
 

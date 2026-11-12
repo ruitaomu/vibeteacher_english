@@ -62,6 +62,57 @@
   margin-bottom: 16rpx;
 }
 
+.article-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.article-level {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.article-button {
+  width: 220rpx;
+  margin: 0;
+  border: 1rpx dashed #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 28rpx;
+}
+
+.article-meta {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.article-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8rpx;
+}
+
+.article-line {
+  display: block;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.article-warning {
+  color: #b45309;
+}
+
+.article-link {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #2563eb;
+}
+
 .result-text {
   font-size: 28rpx;
   line-height: 1.8;

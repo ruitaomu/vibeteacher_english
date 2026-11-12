@@ -31,6 +31,15 @@ spring:
 token:
   secret: ${SESSION_TOKEN_SECRET:}
 
+# 阅读助手“推荐文章”的来源：开放许可（Creative Commons）站点 + RSS 源（逗号分隔，留空则不使用）
+reading:
+  articles:
+    simple-wikipedia-api: https://simple.wikipedia.org/w/api.php
+    wikinews-api: https://en.wikinews.org/w/api.php
+    plos-api: https://api.plos.org/search
+    rss-feeds: https://www.newsinlevels.com/feed/,https://breakingnewsenglish.com/bne.xml
+    max-chars: 2000
+
 
 
 

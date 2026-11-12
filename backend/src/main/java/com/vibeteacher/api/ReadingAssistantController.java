@@ -4,10 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.vibeteacher.api.dto.ReadingAnalysisRequest;
@@ -15,6 +17,7 @@ import com.vibeteacher.api.dto.ReadingAnalysisResponse;
 import com.vibeteacher.api.dto.SentenceStructureRequest;
 import com.vibeteacher.api.dto.SentenceStructureResponse;
 import com.vibeteacher.security.TokenService;
+import com.vibeteacher.service.ReadingArticleService;
 import com.vibeteacher.service.ReadingAssistantService;
 
 @RestController
@@ -23,11 +26,14 @@ public class ReadingAssistantController {
     private static final Logger logger = LoggerFactory.getLogger(ReadingAssistantController.class);
 
     private final ReadingAssistantService readingAssistantService;
+    private final ReadingArticleService readingArticleService;
     private final TokenService tokenService;
 
     public ReadingAssistantController(ReadingAssistantService readingAssistantService,
+                                      ReadingArticleService readingArticleService,
                                       TokenService tokenService) {
         this.readingAssistantService = readingAssistantService;
+        this.readingArticleService = readingArticleService;
         this.tokenService = tokenService;
     }
 
@@ -85,6 +91,27 @@ public class ReadingAssistantController {
             logger.error("Sentence structure explain failed unexpectedly. model={}", request.getModel(), ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("句子结构讲解服务暂时不可用，请稍后重试。错误详情: " + ex.getMessage());
+        }
+    }
+
+    @GetMapping("/article")
+    public ResponseEntity<?> fetchArticle(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                          @RequestParam(value = "level", required = false) String level) {
+        ResponseEntity<String> authError = validateAuthorization(authorization);
+        if (authError != null) {
+            return authError;
+        }
+        if (level == null || level.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("缺少学习级别");
+        }
+
+        try {
+            return ResponseEntity.ok(readingArticleService.fetchArticle(level));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (IllegalStateException ex) {
+            logger.warn("Reading article fetch failed. level={}", level, ex);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ex.getMessage());
         }
     }
 

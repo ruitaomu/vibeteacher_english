@@ -15,7 +15,91 @@ Page({
     },
     models: ['gpt-5.4-mini', 'gpt-5.4'],
     modelLabels: ['快速', '专家'],
-    modelIndex: 0
+    modelIndex: 0,
+    levels: [
+      '中学7年级', '中学8年级', '中学9年级', '中学10年级',
+      '中学11年级', '中学12年级',
+      '大学英语四级', '大学英语六级', 'TOEFL写作', 'GRE写作'
+    ],
+    levelLabels: [
+      '中学7年级', '中学8年级', '中学9年级', '中学10年级',
+      '中学11年级', '中学12年级',
+      '大学英语四级', '大学英语六级', 'TOEFL', 'GRE'
+    ],
+    levelIndex: 5,
+    articleLoading: false,
+    article: null
+  },
+
+  onLevelChange(e) {
+    this.setData({ levelIndex: parseInt(e.detail.value, 10) });
+  },
+
+  async fetchArticle() {
+    if (this.data.articleLoading || this.data.loading) {
+      return;
+    }
+    this.setData({ error: '', articleLoading: true });
+    this._showBusy('正在获取文章...');
+
+    try {
+      if (!app.isTokenValid()) {
+        await app.getSessionToken();
+      }
+      const article = await this._requestArticle();
+      if (!article || !article.text) {
+        throw new Error('未获取到文章内容，请重试。');
+      }
+      this.setData({
+        article,
+        result: null,
+        'form.text': article.text
+      });
+    } catch (err) {
+      this.setData({ error: err.message || '获取文章失败，请稍后重试。' });
+    } finally {
+      this.setData({ articleLoading: false });
+      this._hideBusy();
+    }
+  },
+
+  _requestArticle(isRetry) {
+    return new Promise((resolve, reject) => {
+      const level = this.data.levels[this.data.levelIndex];
+      wx.request({
+        url: `${app.globalData.serverBase}/api/reading/article?level=${encodeURIComponent(level)}`,
+        method: 'GET',
+        timeout: 60000,
+        header: {
+          Authorization: `Bearer ${app.globalData.sessionToken}`
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            resolve(res.data);
+          } else if (res.statusCode === 401 && !isRetry) {
+            app.getSessionToken({ forceRefresh: true })
+              .then(() => this._requestArticle(true))
+              .then(resolve)
+              .catch(reject);
+          } else {
+            const message = this._extractApiErrorMessage(res) || `请求失败 (${res.statusCode})`;
+            reject(new Error(message));
+          }
+        },
+        fail: (err) => reject(new Error(err.errMsg || '网络错误'))
+      });
+    });
+  },
+
+  copyArticleLink() {
+    const article = this.data.article;
+    if (!article || !article.url) {
+      return;
+    }
+    wx.setClipboardData({
+      data: article.url,
+      success: () => wx.showToast({ title: '原文链接已复制', icon: 'none' })
+    });
   },
 
   onModelChange(e) {
