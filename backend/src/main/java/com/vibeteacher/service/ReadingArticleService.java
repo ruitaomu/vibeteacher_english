@@ -49,6 +49,7 @@ public class ReadingArticleService {
     private static final String USER_AGENT =
         "VibeTeacherEnglish/1.0 (https://github.com/ruitaomu/vibeteacher_english)";
     private static final int CANDIDATES_PER_SOURCE = 3;
+    private static final int NEAREST_CANDIDATES = 3;
     private static final int MIN_WIKI_PAGE_BYTES = 2500;
     private static final int MIN_TEXT_CHARS = 300;
     private static final int PLOS_MAX_START = 200;
@@ -63,6 +64,7 @@ public class ReadingArticleService {
     private static final Pattern HTML_TAG = Pattern.compile("<[^>]+>");
     private static final Pattern HTML_BLOCK_END = Pattern.compile("(?i)<br\\s*/?>|</(p|div|li|h\\d|blockquote)>");
     private static final Pattern FEED_FOOTER = Pattern.compile("(?i)the post .* appeared first on .*");
+    private static final Pattern FEED_PAGE_PREFIX = Pattern.compile("^Page \\d+\\s*[–—-]\\s*");
     private static final String RSS_RIGHTS_NOTICE = "版权归原网站所有";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -76,6 +78,7 @@ public class ReadingArticleService {
     private final String wikinewsApi;
     private final String plosApi;
     private final List<String> rssFeeds;
+    private final int rssMaxPages;
     private final int maxChars;
 
     public ReadingArticleService(
@@ -83,6 +86,7 @@ public class ReadingArticleService {
         @Value("${reading.articles.wikinews-api:https://en.wikinews.org/w/api.php}") String wikinewsApi,
         @Value("${reading.articles.plos-api:https://api.plos.org/search}") String plosApi,
         @Value("${reading.articles.rss-feeds:}") String[] rssFeeds,
+        @Value("${reading.articles.rss-max-pages:1}") int rssMaxPages,
         @Value("${reading.articles.max-chars:2000}") int maxChars) {
         this.simpleWikipediaApi = simpleWikipediaApi;
         this.wikinewsApi = wikinewsApi;
@@ -91,6 +95,7 @@ public class ReadingArticleService {
             .map(String::trim)
             .filter(feed -> !feed.isEmpty())
             .collect(Collectors.toList());
+        this.rssMaxPages = Math.max(1, rssMaxPages);
         this.maxChars = maxChars;
     }
 
@@ -99,10 +104,23 @@ public class ReadingArticleService {
      * @throws IllegalStateException    所有来源都没有拿到可用文章
      */
     public ReadingArticleResponse fetchArticle(String levelLabel) {
+        return fetchArticle(levelLabel, List.of());
+    }
+
+    /**
+     * @param excludeUrls 最近看过的文章链接，第一项为当前文章。优先返回没看过的文章；
+     *                    只剩看过的文章时退而返回其中一篇，但绝不返回当前文章。
+     */
+    public ReadingArticleResponse fetchArticle(String levelLabel, List<String> excludeUrls) {
         ReadingLevel level = ReadingLevel.fromLabel(levelLabel);
         if (level == null) {
             throw new IllegalArgumentException("不支持的学习级别: " + levelLabel);
         }
+        List<String> seen = excludeUrls == null ? List.of() : excludeUrls.stream()
+            .filter(url -> url != null && !url.isBlank())
+            .map(String::trim)
+            .collect(Collectors.toList());
+        String current = seen.isEmpty() ? "" : seen.get(0);
 
         List<ArticleSource> sources = new ArrayList<>(level.sources());
         if (!rssFeeds.isEmpty()) {
@@ -110,7 +128,9 @@ public class ReadingArticleService {
         }
         Collections.shuffle(sources, random);
 
-        ReadingArticleResponse best = null;
+        List<ReadingArticleResponse> unseen = new ArrayList<>();
+        List<ReadingArticleResponse> seenBefore = new ArrayList<>();
+        boolean currentArticleFound = false;
         for (ArticleSource source : sources) {
             List<ReadingArticleResponse> candidates;
             try {
@@ -123,24 +143,47 @@ public class ReadingArticleService {
                 break;
             }
 
-            List<ReadingArticleResponse> matched = candidates.stream()
+            List<ReadingArticleResponse> fresh = new ArrayList<>();
+            for (ReadingArticleResponse candidate : candidates) {
+                if (candidate.getUrl().equals(current)) {
+                    currentArticleFound = true;
+                } else if (seen.contains(candidate.getUrl())) {
+                    seenBefore.add(candidate);
+                } else {
+                    fresh.add(candidate);
+                }
+            }
+            List<ReadingArticleResponse> matched = fresh.stream()
                 .filter(candidate -> level.matches(candidate.getEstimatedGrade()))
                 .collect(Collectors.toList());
             if (!matched.isEmpty()) {
                 return finish(matched.get(random.nextInt(matched.size())), level, true);
             }
-            for (ReadingArticleResponse candidate : candidates) {
-                if (best == null
-                    || level.distance(candidate.getEstimatedGrade()) < level.distance(best.getEstimatedGrade())) {
-                    best = candidate;
-                }
-            }
+            unseen.addAll(fresh);
         }
 
-        if (best == null) {
+        List<ReadingArticleResponse> pool = unseen.isEmpty() ? seenBefore : unseen;
+        if (pool.isEmpty()) {
+            if (currentArticleFound) {
+                throw new IllegalStateException("暂时没有其他可用文章，请稍后重试或切换学习级别。");
+            }
             throw new IllegalStateException("暂时无法从文章来源获取内容，请稍后重试。");
         }
-        return finish(best, level, false);
+        List<ReadingArticleResponse> matched = pool.stream()
+            .filter(candidate -> level.matches(candidate.getEstimatedGrade()))
+            .collect(Collectors.toList());
+        if (!matched.isEmpty()) {
+            return finish(matched.get(random.nextInt(matched.size())), level, true);
+        }
+        return finish(pickNearest(pool, level), level, false);
+    }
+
+    /** 在难度最接近的几篇里随机挑一篇，避免每次都落到同一篇“最接近”的文章上。 */
+    private ReadingArticleResponse pickNearest(List<ReadingArticleResponse> pool, ReadingLevel level) {
+        List<ReadingArticleResponse> sorted = new ArrayList<>(pool);
+        sorted.sort((a, b) -> Double.compare(
+            level.distance(a.getEstimatedGrade()), level.distance(b.getEstimatedGrade())));
+        return sorted.get(random.nextInt(Math.min(NEAREST_CANDIDATES, sorted.size())));
     }
 
     private ReadingArticleResponse finish(ReadingArticleResponse article, ReadingLevel level, boolean matched) {
@@ -305,7 +348,7 @@ public class ReadingArticleService {
         IOException lastFailure = null;
         for (String feedUrl : rssFeeds) {
             try {
-                articles.addAll(parseRssFeed(feedUrl, getBody(feedUrl, "application/rss+xml, application/xml, text/xml")));
+                articles.addAll(fetchRssFeed(feedUrl));
             } catch (IOException ex) {
                 logger.warn("Fetching RSS feed failed. feed={}", feedUrl, ex);
                 lastFailure = ex;
@@ -314,7 +357,36 @@ public class ReadingArticleService {
         if (articles.isEmpty() && lastFailure != null) {
             throw lastFailure;
         }
-        return articles;
+        // 同一篇赞助文章会以不同级别的链接重复出现，按正文去重
+        Map<String, ReadingArticleResponse> distinct = new LinkedHashMap<>();
+        for (ReadingArticleResponse article : articles) {
+            distinct.putIfAbsent(article.getText(), article);
+        }
+        return new ArrayList<>(distinct.values());
+    }
+
+    /**
+     * feed 第一页只有最新的十几条，所以随机读取 WordPress 风格的 {@code ?paged=N} 历史分页；
+     * 不支持分页的 feed 会忽略该参数。随机页失败或为空时回退到第一页。
+     */
+    private List<ReadingArticleResponse> fetchRssFeed(String feedUrl) throws IOException, InterruptedException {
+        int page = 1 + random.nextInt(rssMaxPages);
+        if (page > 1) {
+            String pagedUrl = feedUrl + (feedUrl.contains("?") ? "&" : "?") + "paged=" + page;
+            try {
+                List<ReadingArticleResponse> articles = parseRssFeed(feedUrl, getRssBody(pagedUrl));
+                if (!articles.isEmpty()) {
+                    return articles;
+                }
+            } catch (IOException ex) {
+                logger.info("RSS page unavailable, falling back to first page. feed={}, page={}", feedUrl, page);
+            }
+        }
+        return parseRssFeed(feedUrl, getRssBody(feedUrl));
+    }
+
+    private String getRssBody(String url) throws IOException, InterruptedException {
+        return getBody(url, "application/rss+xml, application/xml, text/xml");
     }
 
     private List<ReadingArticleResponse> parseRssFeed(String feedUrl, String xml) throws IOException {
@@ -335,6 +407,8 @@ public class ReadingArticleService {
         NodeList channels = document.getElementsByTagNameNS("*", "channel");
         if (channels.getLength() > 0) {
             sourceName = childText((Element) channels.item(0), "title");
+            // WordPress 历史分页的频道标题带有 "Page N – " 前缀
+            sourceName = FEED_PAGE_PREFIX.matcher(sourceName).replaceFirst("");
         }
         if (sourceName.isEmpty()) {
             sourceName = URI.create(feedUrl).getHost();

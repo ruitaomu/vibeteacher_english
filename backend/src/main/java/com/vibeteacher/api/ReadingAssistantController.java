@@ -1,9 +1,13 @@
 package com.vibeteacher.api;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -96,7 +100,8 @@ public class ReadingAssistantController {
 
     @GetMapping("/article")
     public ResponseEntity<?> fetchArticle(@RequestHeader(value = "Authorization", required = false) String authorization,
-                                          @RequestParam(value = "level", required = false) String level) {
+                                          @RequestParam(value = "level", required = false) String level,
+                                          @RequestParam MultiValueMap<String, String> query) {
         ResponseEntity<String> authError = validateAuthorization(authorization);
         if (authError != null) {
             return authError;
@@ -104,9 +109,13 @@ public class ReadingAssistantController {
         if (level == null || level.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("缺少学习级别");
         }
+        // 用原始多值读取，避免 Spring 把含逗号的单个链接拆开
+        List<String> excludeUrls = query.getOrDefault("excludeUrl", List.of());
 
         try {
-            return ResponseEntity.ok(readingArticleService.fetchArticle(level));
+            return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(readingArticleService.fetchArticle(level, excludeUrls));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         } catch (IllegalStateException ex) {

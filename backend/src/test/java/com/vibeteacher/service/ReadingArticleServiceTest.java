@@ -10,6 +10,12 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -34,6 +40,7 @@ class ReadingArticleServiceTest {
     private Function<String, String> wikinews;
     private Function<String, String> plos;
     private Function<String, String> rss;
+    private final List<String> rssQueries = new CopyOnWriteArrayList<>();
 
     @BeforeEach
     void setUp() throws IOException {
@@ -49,9 +56,13 @@ class ReadingArticleServiceTest {
         route("/rss", () -> rss);
         server.start();
 
+        service = newService(1);
+    }
+
+    private ReadingArticleService newService(int rssMaxPages) {
         String base = "http://127.0.0.1:" + server.getAddress().getPort();
-        service = new ReadingArticleService(base + "/simple", base + "/wikinews", base + "/plos",
-            new String[] {base + "/rss?feed=1"}, 500);
+        return new ReadingArticleService(base + "/simple", base + "/wikinews", base + "/plos",
+            new String[] {base + "/rss?feed=1"}, rssMaxPages, 500);
     }
 
     @AfterEach
@@ -153,6 +164,151 @@ class ReadingArticleServiceTest {
         assertThrows(IllegalStateException.class, () -> service.fetchArticle("GRE写作"));
     }
 
+    @Test
+    void excludesCurrentArticleEvenWhenItIsTheOnlyDifficultyMatch() {
+        rss = query -> feed(
+            feedItem("Current", "https://example.org/current", EASY_SENTENCE.repeat(20)),
+            feedItem("Another", "https://example.org/another", HARD_SENTENCE.repeat(3)));
+
+        ReadingArticleResponse current = service.fetchArticle("中学7年级");
+        ReadingArticleResponse next = service.fetchArticle("中学7年级", List.of(current.getUrl()));
+
+        assertEquals("https://example.org/current", current.getUrl());
+        assertTrue(current.isLevelMatched());
+        assertEquals("https://example.org/another", next.getUrl());
+        assertFalse(next.isLevelMatched());
+    }
+
+    @Test
+    void visitsEveryArticleBeforeRepeatingWhenNoneMatchTheLevel() {
+        rss = query -> feed(easyItems(4));
+
+        assertVisitsAllDistinct("GRE写作", 4, false);
+    }
+
+    @Test
+    void visitsEveryMatchingArticleBeforeRepeating() {
+        rss = query -> feed(easyItems(5));
+
+        assertVisitsAllDistinct("中学7年级", 5, true);
+    }
+
+    @Test
+    void fallsBackToEarlierArticlesOnceEveryArticleHasBeenSeen() {
+        rss = query -> feed(easyItems(2));
+
+        ReadingArticleResponse next = service.fetchArticle("中学7年级",
+            List.of("https://example.org/1", "https://example.org/0"));
+
+        assertEquals("https://example.org/0", next.getUrl());
+    }
+
+    @Test
+    void picksAmongSeveralNearestArticlesInsteadOfAlwaysTheSameOne() {
+        rss = query -> feed(easyItems(5));
+
+        Set<String> urls = new HashSet<>();
+        for (int i = 0; i < 40; i++) {
+            urls.add(service.fetchArticle("GRE写作").getUrl());
+        }
+
+        assertTrue(urls.size() > 1, "a level mismatch must not always return the single nearest article");
+    }
+
+    @Test
+    void reportsWhenOnlyTheCurrentArticleIsAvailable() {
+        rss = query -> feed(feedItem("Only", "https://example.org/only", EASY_SENTENCE.repeat(20)));
+
+        ReadingArticleResponse current = service.fetchArticle("中学7年级");
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+            () -> service.fetchArticle("中学7年级", List.of(current.getUrl())));
+
+        assertEquals("暂时没有其他可用文章，请稍后重试或切换学习级别。", error.getMessage());
+        assertEquals(current.getUrl(), service.fetchArticle("中学7年级", List.of()).getUrl());
+    }
+
+    @Test
+    void mergesFeedItemsThatRepeatTheSameText() {
+        String text = EASY_SENTENCE.repeat(20);
+        rss = query -> feed(
+            feedItem("Ad", "https://example.org/ad-level-1", text, false),
+            feedItem("Ad", "https://example.org/ad-level-2", text, false));
+
+        assertThrows(IllegalStateException.class,
+            () -> service.fetchArticle("中学7年级", List.of("https://example.org/ad-level-1")));
+    }
+
+    @Test
+    void readsRandomOlderFeedPagesWithinTheConfiguredLimit() {
+        Set<String> pages = ConcurrentHashMap.newKeySet();
+        rss = query -> {
+            String page = query.contains("paged=") ? query.replaceAll(".*paged=(\\d+).*", "$1") : "1";
+            pages.add(page);
+            String title = page.equals("1") ? "Test News" : "Page " + page + " – Test News";
+            return "<rss version=\"2.0\"><channel><title>" + title + "</title>"
+                + feedItem("Page " + page, "https://example.org/page-" + page, EASY_SENTENCE.repeat(20))
+                + "</channel></rss>";
+        };
+        ReadingArticleService paged = newService(4);
+
+        for (int i = 0; i < 40; i++) {
+            ReadingArticleResponse article = paged.fetchArticle("中学7年级");
+            assertTrue(article.getUrl().matches("https://example\\.org/page-[1-4]"));
+            assertEquals("Test News", article.getSource());
+        }
+
+        assertTrue(pages.stream().anyMatch(page -> !page.equals("1")), "older pages must be requested");
+        assertTrue(pages.stream().allMatch(page -> Integer.parseInt(page) <= 4));
+        assertTrue(rssQueries.stream().allMatch(query -> query.startsWith("feed=1")),
+            "the paging parameter must be appended to the configured feed query");
+    }
+
+    @Test
+    void fallsBackToFirstFeedPageWhenOlderPageIsUnavailable() {
+        rss = query -> query.contains("paged=")
+            ? null
+            : feed(feedItem("Latest", "https://example.org/latest", EASY_SENTENCE.repeat(20)));
+        ReadingArticleService paged = newService(4);
+
+        for (int i = 0; i < 10; i++) {
+            assertEquals("https://example.org/latest", paged.fetchArticle("中学7年级").getUrl());
+        }
+    }
+
+    private void assertVisitsAllDistinct(String level, int count, boolean expectMatched) {
+        List<String> history = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            ReadingArticleResponse article = service.fetchArticle(level, history);
+            assertFalse(history.contains(article.getUrl()), "returned an article that was already shown");
+            assertEquals(expectMatched, article.isLevelMatched());
+            history.add(0, article.getUrl());
+        }
+    }
+
+    private String[] easyItems(int count) {
+        String[] items = new String[count];
+        for (int i = 0; i < count; i++) {
+            items[i] = feedItem("Story " + i, "https://example.org/" + i, EASY_SENTENCE.repeat(20));
+        }
+        return items;
+    }
+
+    private String feed(String... items) {
+        return "<rss version=\"2.0\"><channel><title>Test News</title>"
+            + String.join("", items) + "</channel></rss>";
+    }
+
+    private String feedItem(String title, String url, String text) {
+        return feedItem(title, url, text, true);
+    }
+
+    /** 默认在正文里带上标题，让各条正文互不相同，避免被按正文去重。 */
+    private String feedItem(String title, String url, String text, boolean distinctText) {
+        String body = distinctText ? "This is " + title + ". " + text : text;
+        return "<item><title>" + title + "</title><link>" + url
+            + "</link><description>" + body + "</description></item>";
+    }
+
     private String wikiPage(String query, String extract, String rights) {
         String pageId = query.replaceAll(".*pageids=(\\d+).*", "$1");
         return "{\"query\":{" + rights + ",\"pages\":[{\"pageid\":" + pageId + ",\"title\":\"Cat\","
@@ -162,6 +318,9 @@ class ReadingArticleServiceTest {
     private void route(String path, Supplier<Function<String, String>> handler) {
         server.createContext(path, exchange -> {
             String query = URLDecoder.decode(exchange.getRequestURI().getRawQuery(), StandardCharsets.UTF_8);
+            if (path.equals("/rss")) {
+                rssQueries.add(query);
+            }
             String body = handler.get().apply(query);
             byte[] bytes = (body == null ? "unavailable" : body).getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(body == null ? 503 : 200, bytes.length);
